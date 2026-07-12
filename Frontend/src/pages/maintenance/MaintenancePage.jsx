@@ -146,7 +146,7 @@ const MaintenancePage = () => {
     }
   };
 
-  const filteredRecords = records.filter(record => {
+  const filteredRecords = Array.isArray(records) ? records.filter(record => {
     const vName = (typeof record.vehicle === 'object' && record.vehicle 
       ? (record.vehicle.registrationNumber || record.vehicle.vehicleName || record.vehicle._id)
       : String(record.vehicle || '')).toLowerCase();
@@ -158,7 +158,7 @@ const MaintenancePage = () => {
     const matchStatus = statusFilter === 'All' || status === statusFilter;
     
     return matchSearch && matchStatus;
-  });
+  }) : [];
 
   return (
     <motion.div 
