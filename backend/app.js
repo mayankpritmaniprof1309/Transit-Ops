@@ -1,14 +1,19 @@
 import express from 'express';
 import cors from 'cors';
+import { errorHandler } from './middleware/error.js';
 
 // Import Routes
 import driverRoutes from './routes/driver.routes.js';
+import userRoutes from './routes/user.routes.js';
+import vehicleRoutes from './routes/vehicle.routes.js';
+import tripRoutes from './routes/trip.routes.js';
 import fuelRoutes from './routes/fuel.routes.js';
 import dashboardRoutes from './routes/dashboard.routes.js';
+import maintenanceRoutes from './routes/maintenance.routes.js';
+import reportRoutes from './routes/report.routes.js';
 
 // Import Middleware
 import { requestLogger } from './middleware/logger.js';
-import { errorHandler } from './middleware/error.js';
 
 const app = express();
 
@@ -20,12 +25,25 @@ app.use(express.urlencoded({ extended: true }));
 
 // Routes
 app.use('/api/drivers', driverRoutes);
+app.use('/api/users', userRoutes);
+app.use('/api/vehicles', vehicleRoutes);
+app.use('/api/trips', tripRoutes);
 app.use('/api/fuel-logs', fuelRoutes);
 app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/maintenance', maintenanceRoutes);
+app.use('/api/reports', reportRoutes);
 
-// Base route for testing
+// Base route
 app.get('/', (req, res) => {
   res.send('TransitOps API is running...');
+});
+
+// Fallback Route for Undefined Endpoints
+app.use('*', (req, res) => {
+  res.status(404).json({
+    success: false,
+    message: `Endpoint ${req.originalUrl} not found.`,
+  });
 });
 
 // Error Handler Middleware
