@@ -42,7 +42,8 @@ export default function ExpenseForm({ expense, onSave, onCancel, loading }) {
             _id: t._id || t.id?.toString() || '',
             startLocation: t.startLocation || t.route || `Trip #${t.id}`,
             endLocation: t.endLocation || '',
-            tripStatus: t.tripStatus || t.status || 'Draft'
+            tripStatus: t.tripStatus || t.status || 'Draft',
+            vehicle: t.vehicle
           }));
         } catch (tErr) {
           console.warn('Failed to load trips from service.', tErr);
@@ -74,7 +75,13 @@ export default function ExpenseForm({ expense, onSave, onCancel, loading }) {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    setFormData((prev) => {
+      const updated = { ...prev, [name]: value };
+      if (name === 'vehicle') {
+        updated.trip = ''; // reset trip selection when vehicle changes
+      }
+      return updated;
+    });
   };
 
   const handleSubmit = (e) => {
@@ -100,6 +107,15 @@ export default function ExpenseForm({ expense, onSave, onCancel, loading }) {
   const categories = ['Fuel', 'Maintenance', 'Toll', 'Insurance', 'Repair', 'Other'];
   const paymentMethods = ['Cash', 'Card', 'Bank Transfer', 'Fuel Card'];
 
+  const selectedVehicleObj = vehicles.find((v) => v._id === formData.vehicle);
+  const selectedRegNo = selectedVehicleObj ? selectedVehicleObj.registrationNumber : null;
+
+  const filteredTrips = trips.filter((t) => {
+    if (!formData.vehicle) return false;
+    const tripVehicleId = t.vehicle?._id || t.vehicle;
+    return tripVehicleId === formData.vehicle || tripVehicleId === selectedRegNo;
+  });
+
   return (
     <form onSubmit={handleSubmit} noValidate>
       {validationError && (
@@ -124,7 +140,7 @@ export default function ExpenseForm({ expense, onSave, onCancel, loading }) {
               <option value="">Select Vehicle</option>
               {vehicles.map((v) => (
                 <option key={v._id} value={v._id}>
-                  {v.registrationNumber} - {v.make} {v.model}
+                  {v.registrationNumber} - {v.vehicleName || `${v.make} ${v.model}`}
                 </option>
               ))}
             </select>
@@ -146,7 +162,7 @@ export default function ExpenseForm({ expense, onSave, onCancel, loading }) {
               disabled={loading || fetchingData}
             >
               <option value="">No Associated Trip (N/A)</option>
-              {trips.map((t) => (
+              {filteredTrips.map((t) => (
                 <option key={t._id} value={t._id}>
                   {t.startLocation}{t.endLocation ? ` → ${t.endLocation}` : ''} ({t.tripStatus || 'Draft'})
                 </option>
