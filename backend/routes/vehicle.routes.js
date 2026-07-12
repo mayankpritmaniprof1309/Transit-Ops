@@ -9,11 +9,12 @@ import {
   getVehiclesByStatus,
 } from '../controllers/vehicle.controller.js';
 import {
-  createVehicleValidation,
-  updateVehicleValidation,
+  createVehicleSchema,
+  updateVehicleSchema,
 } from '../validations/vehicle.validation.js';
-import { protect } from '../middleware/auth.middleware.js';
-import { authorize } from '../middleware/role.middleware.js';
+import { protect } from '../middleware/auth.js';
+import { restrictTo } from '../middleware/role.js';
+import { validate } from '../middleware/validation.js';
 
 const router = Router();
 
@@ -33,8 +34,8 @@ router.get('/:id', protect, getVehicleById);
 router.post(
   '/',
   protect,
-  authorize('Fleet Manager'),
-  createVehicleValidation,
+  restrictTo('Fleet Manager'),
+  validate(createVehicleSchema),
   createVehicle
 );
 
@@ -42,8 +43,8 @@ router.post(
 router.put(
   '/:id',
   protect,
-  authorize('Fleet Manager'),
-  updateVehicleValidation,
+  restrictTo('Fleet Manager'),
+  validate(updateVehicleSchema),
   updateVehicle
 );
 
@@ -51,7 +52,7 @@ router.put(
 router.delete(
   '/:id',
   protect,
-  authorize('Fleet Manager'),
+  restrictTo('Fleet Manager'),
   deleteVehicle
 );
 
