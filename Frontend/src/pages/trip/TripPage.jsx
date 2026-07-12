@@ -11,6 +11,7 @@ const TripPage = () => {
   const [trips, setTrips] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState('All');
   
   // Modal State
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -134,9 +135,10 @@ const TripPage = () => {
   };
 
   const filteredTrips = trips.filter(trip => 
-    trip.route?.toLowerCase().includes(searchTerm.toLowerCase()) || 
+    (trip.route?.toLowerCase().includes(searchTerm.toLowerCase()) || 
     trip.driver?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    trip.vehicle?.toLowerCase().includes(searchTerm.toLowerCase())
+    trip.vehicle?.toLowerCase().includes(searchTerm.toLowerCase())) &&
+    (statusFilter === 'All' || trip.status === statusFilter)
   );
 
   const filteredDrivers = drivers.filter(d => 
@@ -180,9 +182,17 @@ const TripPage = () => {
             />
           </div>
           <div>
-            <button className="btn-custom btn-secondary-custom shadow-sm">
-              <FiFilter /> Filters
-            </button>
+            <select 
+              className="form-select text-secondary fw-semibold" 
+              style={{ borderRadius: '12px', minWidth: '160px', padding: '0.55rem 1.2rem', borderColor: 'rgba(100, 116, 139, 0.22)' }}
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+            >
+              <option value="All">All Statuses</option>
+              <option value="Scheduled">Scheduled</option>
+              <option value="In Progress">In Progress</option>
+              <option value="Completed">Completed</option>
+            </select>
           </div>
         </div>
       </div>

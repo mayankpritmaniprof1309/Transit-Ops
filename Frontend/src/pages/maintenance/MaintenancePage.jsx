@@ -8,6 +8,7 @@ const MaintenancePage = () => {
   const [records, setRecords] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState('All');
   
   // Modal State
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -75,8 +76,9 @@ const MaintenancePage = () => {
   };
 
   const filteredRecords = records.filter(record => 
-    record.vehicle?.toLowerCase().includes(searchTerm.toLowerCase()) || 
-    record.type?.toLowerCase().includes(searchTerm.toLowerCase())
+    (record.vehicle?.toLowerCase().includes(searchTerm.toLowerCase()) || 
+    record.type?.toLowerCase().includes(searchTerm.toLowerCase())) &&
+    (statusFilter === 'All' || record.status === statusFilter)
   );
 
   return (
@@ -89,10 +91,10 @@ const MaintenancePage = () => {
       <div className="page-header">
         <h1 className="page-title">Maintenance Records</h1>
         <div className="d-flex gap-3">
-          <button className="btn-premium-secondary" onClick={handleExport}>
+          <button className="btn-custom btn-secondary-custom shadow-sm" onClick={handleExport}>
             <FiDownload /> Export
           </button>
-          <button className="btn-premium-primary" onClick={() => setIsAddModalOpen(true)}>
+          <button className="btn-custom btn-primary-gradient shadow-sm" onClick={() => setIsAddModalOpen(true)}>
             <FiPlus /> Add Record
           </button>
         </div>
@@ -112,9 +114,17 @@ const MaintenancePage = () => {
             />
           </div>
           <div>
-            <button className="btn-premium-secondary">
-              <FiFilter /> Filters
-            </button>
+            <select 
+              className="form-select text-secondary fw-semibold" 
+              style={{ borderRadius: '12px', minWidth: '160px', padding: '0.55rem 1.2rem', borderColor: 'rgba(100, 116, 139, 0.22)' }}
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+            >
+              <option value="All">All Statuses</option>
+              <option value="Pending">Pending</option>
+              <option value="In Progress">In Progress</option>
+              <option value="Completed">Completed</option>
+            </select>
           </div>
         </div>
       </div>
@@ -184,8 +194,8 @@ const MaintenancePage = () => {
                         </select>
                       </div>
                       <div className="d-flex justify-content-end gap-2">
-                        <button type="button" className="btn-premium-secondary" onClick={() => setIsAddModalOpen(false)}>Cancel</button>
-                        <button type="submit" className="btn-premium-primary" disabled={isSubmitting}>
+                        <button type="button" className="btn-custom btn-secondary-custom shadow-sm" onClick={() => setIsAddModalOpen(false)}>Cancel</button>
+                        <button type="submit" className="btn-custom btn-primary-gradient shadow-sm" disabled={isSubmitting}>
                           {isSubmitting ? 'Adding...' : 'Add Record'}
                         </button>
                       </div>
