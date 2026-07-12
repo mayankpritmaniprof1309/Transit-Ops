@@ -1,21 +1,21 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { FaFileDownload, FaFilePdf, FaFileCsv } from 'react-icons/fa';
-import { exportCSV, exportPDF } from '../../services/report.service.js';
+import { FaFileCsv } from 'react-icons/fa';
+import { exportCSV } from '../../services/report.service.js';
 
 /**
- * Reusable Export Button component that downloads a CSV or PDF report.
+ * Reusable Export Button that downloads a CSV report from the backend.
  * @param {Object} props
- * @param {string} props.type - 'csv-expenses' | 'csv-fuel' | 'pdf'
- * @param {Object} props.params - Query params to pass to the export API.
+ * @param {string} props.type - Ignored (always uses the CSV endpoint). Kept for API compatibility.
+ * @param {Object} props.params - Query params passed to /reports/export/csv (type, startDate, endDate, vehicleId).
  * @param {string} props.label - Button text label.
- * @param {string} props.filename - Filename for the downloaded file.
- * @param {string} props.variant - 'primary' | 'success' | 'danger' (default: 'primary')
+ * @param {string} props.filename - Filename for the downloaded file (without extension).
+ * @param {string} props.variant - Style variant: 'primary' | 'success' | 'secondary'
  */
 export const ExportButton = ({
-  type = 'csv-expenses',
+  type = 'csv',
   params = {},
-  label = 'Export',
+  label = 'Export CSV',
   filename = 'report',
   variant = 'primary',
 }) => {
@@ -23,39 +23,25 @@ export const ExportButton = ({
 
   const variantClass = {
     primary: 'btn-primary-gradient',
-    success: 'btn-custom btn-secondary-custom',
-    danger: 'btn-danger-custom',
+    success: 'btn-secondary-custom',
+    secondary: 'btn-secondary-custom',
   }[variant] || 'btn-primary-gradient';
-
-  const Icon = type === 'pdf' ? FaFilePdf : FaFileCsv;
-  const extension = type === 'pdf' ? 'pdf' : 'csv';
-  const mimeType = type === 'pdf' ? 'application/pdf' : 'text/csv';
 
   const handleExport = async () => {
     try {
       setLoading(true);
-      let blob;
-
-      if (type === 'pdf') {
-        blob = await exportPDF(params);
-      } else {
-        // 'csv-expenses' -> 'expenses', 'csv-fuel' -> 'fuel'
-        const reportType = type.replace('csv-', '');
-        blob = await exportCSV(reportType, params);
-      }
-
-      // Trigger browser download
-      const url = window.URL.createObjectURL(new Blob([blob], { type: mimeType }));
+      const blob = await exportCSV(params);
+      const url = window.URL.createObjectURL(new Blob([blob], { type: 'text/csv' }));
       const link = document.createElement('a');
       link.href = url;
-      link.setAttribute('download', `${filename}.${extension}`);
+      link.setAttribute('download', `${filename}.csv`);
       document.body.appendChild(link);
       link.click();
       link.remove();
       window.URL.revokeObjectURL(url);
     } catch (err) {
-      console.error('Export failed:', err);
-      alert('Export failed. The server may not support this export endpoint yet.');
+      console.error('CSV export failed:', err);
+      alert('Export failed. The backend may not support this export type yet.');
     } finally {
       setLoading(false);
     }
@@ -76,7 +62,7 @@ export const ExportButton = ({
         </>
       ) : (
         <>
-          <Icon /> {label}
+          <FaFileCsv /> {label}
         </>
       )}
     </motion.button>
