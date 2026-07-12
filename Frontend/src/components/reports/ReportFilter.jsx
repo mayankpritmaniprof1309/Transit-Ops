@@ -57,9 +57,9 @@ export const ReportFilter = ({
               onChange={(e) => onVehicleChange && onVehicleChange(e.target.value)}
             >
               <option value="">All Vehicles</option>
-              {vehicles.map((v) => (
-                <option key={v._id} value={v._id}>
-                  {v.registrationNumber || v.vehicleName}
+              {vehicles.map((v, index) => (
+                <option key={v._id || v.id || `veh-${index}`} value={v._id || v.id || ''}>
+                  {v.registrationNumber || v.vehicleName || 'Unknown Vehicle'}
                 </option>
               ))}
             </select>
