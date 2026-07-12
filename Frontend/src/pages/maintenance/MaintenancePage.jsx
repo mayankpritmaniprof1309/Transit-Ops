@@ -1,13 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import { FiPlus, FiDownload, FiSearch, FiFilter } from 'react-icons/fi';
+import { FiPlus, FiDownload, FiSearch, FiFilter, FiX } from 'react-icons/fi';
 import MaintenanceTable from '../../components/maintenance/MaintenanceTable';
 import MaintenanceService from '../../services/maintenance.service';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const MaintenancePage = () => {
   const [records, setRecords] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  
+  // Modal State
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [newRecord, setNewRecord] = useState({ vehicle: '', type: '', cost: '', status: 'Pending', date: '' });
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     loadRecords();
@@ -32,9 +37,46 @@ const MaintenancePage = () => {
     }
   };
 
+  // 1. Export Functionality
+  const handleExport = () => {
+    if (records.length === 0) return alert("No data to export");
+    
+    const headers = ['ID', 'Vehicle', 'Type', 'Date', 'Cost', 'Status'];
+    const csvRows = [
+      headers.join(','),
+      ...filteredRecords.map(r => `${r.id},"${r.vehicle}","${r.type}",${r.date},${r.cost},${r.status}`)
+    ];
+    
+    const csvContent = "data:text/csv;charset=utf-8," + csvRows.join('\n');
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `maintenance_export_${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  // 2. Add Functionality
+  const handleAddSubmit = async (e) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    try {
+      const response = await MaintenanceService.createMaintenanceRecord(newRecord);
+      setRecords([...records, response.data]);
+      setIsAddModalOpen(false);
+      setNewRecord({ vehicle: '', type: '', cost: '', status: 'Pending', date: '' });
+    } catch (error) {
+      console.error("Error creating maintenance record", error);
+      alert("Failed to add record");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   const filteredRecords = records.filter(record => 
-    record.vehicle.toLowerCase().includes(searchTerm.toLowerCase()) || 
-    record.type.toLowerCase().includes(searchTerm.toLowerCase())
+    record.vehicle?.toLowerCase().includes(searchTerm.toLowerCase()) || 
+    record.type?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
@@ -47,10 +89,10 @@ const MaintenancePage = () => {
       <div className="page-header">
         <h1 className="page-title">Maintenance Records</h1>
         <div className="d-flex gap-3">
-          <button className="btn-secondary-soft">
+          <button className="btn-premium-secondary" onClick={handleExport}>
             <FiDownload /> Export
           </button>
-          <button className="btn-primary-gradient">
+          <button className="btn-premium-primary" onClick={() => setIsAddModalOpen(true)}>
             <FiPlus /> Add Record
           </button>
         </div>
@@ -58,18 +100,19 @@ const MaintenancePage = () => {
 
       <div className="premium-card p-4 mb-4">
         <div className="d-flex justify-content-between align-items-center">
-          <div className="search-icon-wrapper">
-            <FiSearch className="search-icon" />
+          <div className="search-icon-wrapper w-50">
+            <FiSearch className="search-icon" style={{ position: 'absolute', left: '15px', top: '50%', transform: 'translateY(-50%)', color: '#64748B' }} />
             <input 
               type="text" 
-              className="search-bar" 
+              className="form-control" 
+              style={{ paddingLeft: '40px', borderRadius: '12px' }}
               placeholder="Search by vehicle or type..." 
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
           <div>
-            <button className="btn-secondary-soft">
+            <button className="btn-premium-secondary">
               <FiFilter /> Filters
             </button>
           </div>
@@ -85,6 +128,75 @@ const MaintenancePage = () => {
       ) : (
         <MaintenanceTable records={filteredRecords} onDelete={handleDelete} />
       )}
+
+      {/* Add Modal */}
+      <AnimatePresence>
+        {isAddModalOpen && (
+          <>
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 0.5 }}
+              exit={{ opacity: 0 }}
+              className="modal-backdrop bg-dark"
+              style={{ display: 'block', zIndex: 1040 }}
+              onClick={() => setIsAddModalOpen(false)}
+            />
+            <motion.div 
+              initial={{ opacity: 0, y: -50 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -50 }}
+              className="modal d-block" 
+              tabIndex="-1"
+              style={{ zIndex: 1050 }}
+            >
+              <div className="modal-dialog modal-dialog-centered">
+                <div className="modal-content premium-card border-0 p-0">
+                  <div className="modal-header border-bottom-0 pb-0">
+                    <h5 className="modal-title fw-bold">Add Maintenance Record</h5>
+                    <button type="button" className="btn-close" onClick={() => setIsAddModalOpen(false)}></button>
+                  </div>
+                  <div className="modal-body">
+                    <form onSubmit={handleAddSubmit}>
+                      <div className="mb-3">
+                        <label className="form-label text-secondary fw-semibold small">Vehicle ID</label>
+                        <input type="text" className="form-control" required value={newRecord.vehicle} onChange={e => setNewRecord({...newRecord, vehicle: e.target.value})} placeholder="e.g. Truck-001" />
+                      </div>
+                      <div className="mb-3">
+                        <label className="form-label text-secondary fw-semibold small">Maintenance Type</label>
+                        <input type="text" className="form-control" required value={newRecord.type} onChange={e => setNewRecord({...newRecord, type: e.target.value})} placeholder="e.g. Oil Change" />
+                      </div>
+                      <div className="row">
+                        <div className="col-md-6 mb-3">
+                          <label className="form-label text-secondary fw-semibold small">Cost ($)</label>
+                          <input type="number" className="form-control" required value={newRecord.cost} onChange={e => setNewRecord({...newRecord, cost: e.target.value})} placeholder="0.00" />
+                        </div>
+                        <div className="col-md-6 mb-3">
+                          <label className="form-label text-secondary fw-semibold small">Date</label>
+                          <input type="date" className="form-control" required value={newRecord.date} onChange={e => setNewRecord({...newRecord, date: e.target.value})} />
+                        </div>
+                      </div>
+                      <div className="mb-4">
+                        <label className="form-label text-secondary fw-semibold small">Status</label>
+                        <select className="form-select" value={newRecord.status} onChange={e => setNewRecord({...newRecord, status: e.target.value})}>
+                          <option>Pending</option>
+                          <option>In Progress</option>
+                          <option>Completed</option>
+                        </select>
+                      </div>
+                      <div className="d-flex justify-content-end gap-2">
+                        <button type="button" className="btn-premium-secondary" onClick={() => setIsAddModalOpen(false)}>Cancel</button>
+                        <button type="submit" className="btn-premium-primary" disabled={isSubmitting}>
+                          {isSubmitting ? 'Adding...' : 'Add Record'}
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 };
