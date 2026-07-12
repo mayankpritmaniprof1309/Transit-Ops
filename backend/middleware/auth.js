@@ -1,5 +1,5 @@
-import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
+import { verifyToken } from '../utils/jwt.js';
 
 /**
  * Authentication protecting middleware
@@ -22,7 +22,7 @@ export const protect = async (req, res, next) => {
     }
 
     // Verify token
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'secret');
+    const decoded = verifyToken(token);
 
     // Check if user still exists
     const currentUser = await User.findById(decoded.id || decoded._id).select('-password');
