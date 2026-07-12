@@ -103,15 +103,20 @@ export default function ExpenseForm({ expense, onSave, onSubmit, onCancel, loadi
       return;
     }
 
+    const dataToSubmit = { ...formData };
+    if (!dataToSubmit.trip) {
+      delete dataToSubmit.trip;
+    }
+
     if (onSubmit) {
-      onSubmit(formData);
+      onSubmit(dataToSubmit);
     } else if (onSave) {
-      onSave(formData);
+      onSave(dataToSubmit);
     }
   };
 
   const categories = ['Fuel', 'Maintenance', 'Toll', 'Insurance', 'Repair', 'Other'];
-  const paymentMethods = ['Cash', 'Card', 'Bank Transfer', 'Fuel Card'];
+  const paymentMethods = ['Cash', 'Card', 'UPI', 'Bank Transfer'];
 
   const selectedVehicleObj = vehicles.find((v) => v._id === formData.vehicle);
   const selectedRegNo = selectedVehicleObj ? selectedVehicleObj.registrationNumber : null;
