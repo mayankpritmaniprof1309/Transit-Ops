@@ -270,7 +270,7 @@ export const Reports = () => {
             <FaSync className={`me-1 ${loading ? 'fa-spin' : ''}`} />
             {loading ? 'Loading...' : 'Refresh'}
           </button>
-          <ExportButton type="csv" params={{ ...exportParams, type: 'fuel' }}     label="Export Fuel CSV"    filename="fuel-report" />
+          <ExportButton type="csv" params={{ ...exportParams, type: 'fuel_logs' }}     label="Export Fuel CSV"    filename="fuel-report" />
           <ExportButton type="csv" params={{ ...exportParams, type: 'expenses' }} label="Export Expense CSV" filename="expense-report" variant="success" />
         </div>
       </div>
@@ -428,7 +428,7 @@ export const Reports = () => {
                     <h5 className="mb-0 fw-semibold d-flex align-items-center gap-2">
                       <FaGasPump className="text-primary" /> Fuel Efficiency
                     </h5>
-                    <ExportButton type="csv" params={{ ...exportParams, type: 'fuel' }} label="CSV" filename="fuel-report" />
+                    <ExportButton type="csv" params={{ ...exportParams, type: 'fuel_logs' }} label="CSV" filename="fuel-report" />
                   </div>
                   <BreakdownTable
                     rows={fuelTableRows}
