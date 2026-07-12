@@ -8,6 +8,7 @@ import userRoutes from './routes/user.routes.js';
 import vehicleRoutes from './routes/vehicle.routes.js';
 import tripRoutes from './routes/trip.routes.js';
 import fuelRoutes from './routes/fuel.routes.js';
+import dashboardRoutes from './routes/dashboard.routes.js';
 
 // Import Middleware
 import { requestLogger } from './middleware/logger.js';
@@ -26,6 +27,7 @@ app.use('/api/users', userRoutes);
 app.use('/api/vehicles', vehicleRoutes);
 app.use('/api/trips', tripRoutes);
 app.use('/api/fuel-logs', fuelRoutes);
+app.use('/api/dashboard', dashboardRoutes);
 
 // Base route
 app.get('/', (req, res) => {
