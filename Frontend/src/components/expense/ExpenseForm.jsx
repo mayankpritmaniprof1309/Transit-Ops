@@ -4,7 +4,7 @@ import { getAllVehicles } from '../../services/vehicle.service.js';
 import tripService from '../../services/trip.service.js';
 import { FaTruck, FaMap, FaDollarSign, FaCalendarAlt, FaFileInvoice, FaCreditCard } from 'react-icons/fa';
 
-export default function ExpenseForm({ expense, onSave, onCancel, loading }) {
+export default function ExpenseForm({ expense, onSave, onSubmit, onCancel, loading, isSubmitting }) {
   const [formData, setFormData] = useState({
     vehicle: '',
     trip: '',
@@ -19,6 +19,8 @@ export default function ExpenseForm({ expense, onSave, onCancel, loading }) {
   const [trips, setTrips] = useState([]);
   const [fetchingData, setFetchingData] = useState(false);
   const [validationError, setValidationError] = useState('');
+
+  const isFormDisabled = loading || isSubmitting;
 
   // Fetch dropdown list items
   useEffect(() => {
@@ -84,7 +86,7 @@ export default function ExpenseForm({ expense, onSave, onCancel, loading }) {
     });
   };
 
-  const handleSubmit = (e) => {
+  const handleFormSubmit = (e) => {
     e.preventDefault();
     setValidationError('');
 
@@ -101,7 +103,11 @@ export default function ExpenseForm({ expense, onSave, onCancel, loading }) {
       return;
     }
 
-    onSave(formData);
+    if (onSubmit) {
+      onSubmit(formData);
+    } else if (onSave) {
+      onSave(formData);
+    }
   };
 
   const categories = ['Fuel', 'Maintenance', 'Toll', 'Insurance', 'Repair', 'Other'];
@@ -117,7 +123,7 @@ export default function ExpenseForm({ expense, onSave, onCancel, loading }) {
   });
 
   return (
-    <form onSubmit={handleSubmit} noValidate>
+    <form onSubmit={handleFormSubmit} noValidate>
       {validationError && (
         <div className="alert alert-danger py-2 px-3 border-0 rounded-3 mb-3 small">
           {validationError}
@@ -134,7 +140,7 @@ export default function ExpenseForm({ expense, onSave, onCancel, loading }) {
               className="form-select bg-light border-light"
               value={formData.vehicle}
               onChange={handleChange}
-              disabled={loading || fetchingData}
+              disabled={isFormDisabled || fetchingData}
               required
             >
               <option value="">Select Vehicle</option>
@@ -159,7 +165,7 @@ export default function ExpenseForm({ expense, onSave, onCancel, loading }) {
               className="form-select bg-light border-light"
               value={formData.trip}
               onChange={handleChange}
-              disabled={loading || fetchingData}
+              disabled={isFormDisabled || fetchingData}
             >
               <option value="">No Associated Trip (N/A)</option>
               {filteredTrips.map((t) => (
@@ -183,7 +189,7 @@ export default function ExpenseForm({ expense, onSave, onCancel, loading }) {
               className="form-select bg-light border-light"
               value={formData.expenseType}
               onChange={handleChange}
-              disabled={loading}
+              disabled={isFormDisabled}
               required
             >
               {categories.map((c) => (
@@ -209,7 +215,7 @@ export default function ExpenseForm({ expense, onSave, onCancel, loading }) {
               placeholder="100"
               value={formData.amount}
               onChange={handleChange}
-              disabled={loading}
+              disabled={isFormDisabled}
               min="0.01"
               step="0.01"
               required
@@ -230,7 +236,7 @@ export default function ExpenseForm({ expense, onSave, onCancel, loading }) {
               className="form-control bg-light border-light"
               value={formData.expenseDate}
               onChange={handleChange}
-              disabled={loading}
+              disabled={isFormDisabled}
               required
             />
             <label htmlFor="formDate">
@@ -248,7 +254,7 @@ export default function ExpenseForm({ expense, onSave, onCancel, loading }) {
               className="form-select bg-light border-light"
               value={formData.paymentMethod}
               onChange={handleChange}
-              disabled={loading}
+              disabled={isFormDisabled}
               required
             >
               {paymentMethods.map((m) => (
@@ -273,7 +279,7 @@ export default function ExpenseForm({ expense, onSave, onCancel, loading }) {
               placeholder="Refuel logs for truck route..."
               value={formData.description}
               onChange={handleChange}
-              disabled={loading}
+              disabled={isFormDisabled}
               style={{ height: '100px' }}
             />
             <label htmlFor="formDescription">Description / Extra Notes</label>
@@ -285,17 +291,17 @@ export default function ExpenseForm({ expense, onSave, onCancel, loading }) {
         <button
           type="button"
           onClick={onCancel}
-          className="btn btn-premium-secondary px-4"
-          disabled={loading}
+          className="btn-custom btn-secondary-custom shadow-sm px-4"
+          disabled={isFormDisabled}
         >
           Cancel
         </button>
         <button
           type="submit"
-          className="btn btn-premium-primary px-4"
-          disabled={loading}
+          className="btn-custom btn-primary-gradient shadow-sm px-4"
+          disabled={isFormDisabled}
         >
-          {loading ? 'Processing...' : expense ? 'Update Expense' : 'Save Expense'}
+          {isFormDisabled ? 'Processing...' : expense ? 'Update Expense' : 'Save Expense'}
         </button>
       </div>
     </form>
