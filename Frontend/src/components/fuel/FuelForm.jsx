@@ -140,7 +140,7 @@ export default function FuelForm({ log, onSave, onCancel, loading }) {
               <option value="">Select Vehicle</option>
               {vehicles.map((v) => (
                 <option key={v._id} value={v._id}>
-                  {v.registrationNumber} - {v.make} {v.model}
+                  {v.registrationNumber} - {v.vehicleName} ({v.vehicleModel})
                 </option>
               ))}
             </select>
