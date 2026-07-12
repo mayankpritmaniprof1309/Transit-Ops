@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { FiPlus, FiDownload, FiSearch, FiFilter, FiX } from 'react-icons/fi';
+import { FaPlus } from 'react-icons/fa';
 import TripTable from '../../components/trip/TripTable';
 import TripService from '../../services/trip.service';
 import { getAllDrivers } from '../../services/driver.service.js';
@@ -130,11 +131,11 @@ const TripPage = () => {
       <div className="page-header">
         <h1 className="page-title">Trips Management</h1>
         <div className="d-flex gap-3">
-          <button className="btn-premium-secondary" onClick={handleExport}>
+          <button className="btn-custom btn-secondary-custom shadow-sm" onClick={handleExport}>
             <FiDownload /> Export
           </button>
-          <button className="btn-premium-primary" onClick={() => setIsAddModalOpen(true)}>
-            <FiPlus /> Add Trip
+          <button className="btn-custom btn-primary-gradient shadow-sm" onClick={() => setIsAddModalOpen(true)}>
+            <FaPlus /> Add Trip
           </button>
         </div>
       </div>
@@ -153,7 +154,7 @@ const TripPage = () => {
             />
           </div>
           <div>
-            <button className="btn-premium-secondary">
+            <button className="btn-custom btn-secondary-custom shadow-sm">
               <FiFilter /> Filters
             </button>
           </div>
@@ -289,8 +290,8 @@ const TripPage = () => {
                         </select>
                       </div>
                       <div className="d-flex justify-content-end gap-2">
-                        <button type="button" className="btn-premium-secondary" onClick={() => setIsAddModalOpen(false)}>Cancel</button>
-                        <button type="submit" className="btn-premium-primary" disabled={isSubmitting}>
+                        <button type="button" className="btn-custom btn-secondary-custom shadow-sm" onClick={() => setIsAddModalOpen(false)}>Cancel</button>
+                        <button type="submit" className="btn-custom btn-primary-gradient shadow-sm" disabled={isSubmitting}>
                           {isSubmitting ? 'Adding...' : 'Add Trip'}
                         </button>
                       </div>
