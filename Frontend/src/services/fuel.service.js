@@ -17,11 +17,11 @@ const normalizeLog = (log) => {
 
 /**
  * Converts a frontend log payload back to the backend's expected schema keys.
+ * Ensures 'trip' is completely omitted if empty, preventing Cast to ObjectId errors in Mongoose.
  */
 const denormalizePayload = (data) => {
-  return {
+  const payload = {
     vehicle: data.vehicle,
-    trip: data.trip || undefined,
     fuelQuantity: Number(data.quantity),
     fuelCost: Number(data.cost),
     fuelStation: data.fuelStation || '',
@@ -29,6 +29,12 @@ const denormalizePayload = (data) => {
     odometerReading: Number(data.odometer),
     remarks: data.remarks || '',
   };
+  
+  if (data.trip && typeof data.trip === 'string' && data.trip.trim() !== '') {
+    payload.trip = data.trip;
+  }
+  
+  return payload;
 };
 
 /**
