@@ -32,18 +32,30 @@ export default function Dashboard() {
     setLoading(true);
     setError(false);
     try {
-      // Execute all API requests in parallel for optimal load times
-      const [kpiData, expenseData, tripsData, fuelData] = await Promise.all([
+      // Use Promise.allSettled so role-restricted endpoints (403) don't crash the entire dashboard
+      const [kpiResult, expenseResult, tripsResult, fuelResult] = await Promise.allSettled([
         getDashboardKPIs(),
         getExpenseStats(),
         getRecentTrips(5),
         getFuelLogs()
       ]);
 
-      setKpis(kpiData);
-      setExpenseStats(expenseData);
-      setRecentTrips(tripsData.trips || []);
-      setFuelLogs(fuelData);
+      // KPIs are critical — if this fails, show the error state
+      if (kpiResult.status === 'rejected') {
+        throw kpiResult.reason;
+      }
+      setKpis(kpiResult.value);
+
+      // Expense stats — gracefully degrade on 403 (role restriction)
+      setExpenseStats(expenseResult.status === 'fulfilled' ? expenseResult.value : {});
+
+      // Recent trips — gracefully degrade on 403 (role restriction)
+      setRecentTrips(
+        tripsResult.status === 'fulfilled' ? (tripsResult.value.trips || []) : []
+      );
+
+      // Fuel logs — gracefully degrade on 403 (role restriction)
+      setFuelLogs(fuelResult.status === 'fulfilled' ? fuelResult.value : []);
     } catch (err) {
       console.error(err);
       setError(true);
