@@ -1,314 +1,295 @@
 import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { getAllVehicles } from '../../services/vehicle.service.js';
+import { FaTruck, FaGasPump, FaDollarSign, FaCalendarAlt, FaRoad, FaMapMarkerAlt } from 'react-icons/fa';
 
-/**
- * Reusable Form component to create or update Fuel logs.
- * @param {Object} props
- * @param {Object} props.fuelLog - Initial fuel log details if editing.
- * @param {Array} props.vehicles - List of vehicles to populate dropdown.
- * @param {Array} props.trips - List of trips to populate dropdown (optional).
- * @param {Function} props.onSubmit - Triggered on form submit with form data.
- * @param {Function} props.onCancel - Triggered on cancel action.
- * @param {boolean} props.isSubmitting - Toggle loading state for buttons.
- */
-export const FuelForm = ({
-  fuelLog = null,
-  vehicles = [],
-  trips = [],
-  onSubmit,
-  onCancel,
-  isSubmitting = false,
-}) => {
+export default function FuelForm({ log, onSave, onCancel, loading }) {
   const [formData, setFormData] = useState({
     vehicle: '',
-    trip: '',
-    fuelQuantity: '',
-    fuelCost: '',
+    quantity: '',
+    pricePerUnit: '',
+    cost: '',
+    odometer: '',
     fuelStation: '',
-    fuelDate: '',
-    odometerReading: '',
-    remarks: '',
+    date: '',
   });
 
-  const [errors, setErrors] = useState({});
+  const [vehicles, setVehicles] = useState([]);
+  const [fetchingVehicles, setFetchingVehicles] = useState(false);
+  const [validationError, setValidationError] = useState('');
 
+  // Fetch vehicles dropdown
   useEffect(() => {
-    if (fuelLog) {
-      const formattedDate = fuelLog.fuelDate
-        ? new Date(fuelLog.fuelDate).toISOString().split('T')[0]
-        : '';
+    const loadVehicles = async () => {
+      setFetchingVehicles(true);
+      try {
+        const vehRes = await getAllVehicles({ limit: 100 });
+        let list = [];
+        if (vehRes.success && vehRes.data) {
+          list = Array.isArray(vehRes.data) ? vehRes.data : (vehRes.data.vehicles || []);
+        }
+        setVehicles(list);
+      } catch (err) {
+        console.error('Failed to load vehicles list.', err);
+      } finally {
+        setFetchingVehicles(false);
+      }
+    };
+    loadVehicles();
+  }, []);
 
+  // Populate when editing
+  useEffect(() => {
+    if (log) {
       setFormData({
-        vehicle: fuelLog.vehicle?._id || fuelLog.vehicle || '',
-        trip: fuelLog.trip?._id || fuelLog.trip || '',
-        fuelQuantity: fuelLog.fuelQuantity || '',
-        fuelCost: fuelLog.fuelCost || '',
-        fuelStation: fuelLog.fuelStation || '',
-        fuelDate: formattedDate,
-        odometerReading: fuelLog.odometerReading || '',
-        remarks: fuelLog.remarks || '',
-      });
-    } else {
-      // Default to today's date
-      const today = new Date().toISOString().split('T')[0];
-      setFormData({
-        vehicle: vehicles[0]?._id || '',
-        trip: '',
-        fuelQuantity: '',
-        fuelCost: '',
-        fuelStation: '',
-        fuelDate: today,
-        odometerReading: '',
-        remarks: '',
+        vehicle: log.vehicle?._id || log.vehicle || '',
+        quantity: log.quantity || '',
+        pricePerUnit: log.pricePerUnit || '',
+        cost: log.cost || '',
+        odometer: log.odometer || '',
+        fuelStation: log.fuelStation || '',
+        date: log.date ? new Date(log.date).toISOString().substring(0, 10) : '',
       });
     }
-    setErrors({});
-  }, [fuelLog, vehicles]);
+  }, [log]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: name === 'fuelQuantity' || name === 'fuelCost' || name === 'odometerReading'
-        ? (value === '' ? '' : Number(value))
-        : value,
-    }));
+    setFormData((prev) => {
+      const updated = { ...prev, [name]: value };
 
-    // Clear error for field
-    if (errors[name]) {
-      setErrors((prev) => ({ ...prev, [name]: '' }));
-    }
-  };
+      // Auto-calculations logic:
+      const qty = parseFloat(updated.quantity);
+      const prc = parseFloat(updated.pricePerUnit);
+      const cst = parseFloat(updated.cost);
 
-  const validateForm = () => {
-    const newErrors = {};
+      if (name === 'quantity' && !isNaN(qty) && qty > 0) {
+        if (!isNaN(cst)) {
+          updated.pricePerUnit = (cst / qty).toFixed(2);
+        } else if (!isNaN(prc)) {
+          updated.cost = (qty * prc).toFixed(2);
+        }
+      } else if (name === 'cost' && !isNaN(cst) && cst > 0) {
+        if (!isNaN(qty) && qty > 0) {
+          updated.pricePerUnit = (cst / qty).toFixed(2);
+        } else if (!isNaN(prc) && prc > 0) {
+          updated.quantity = (cst / prc).toFixed(2);
+        }
+      } else if (name === 'pricePerUnit' && !isNaN(prc) && prc > 0) {
+        if (!isNaN(qty) && qty > 0) {
+          updated.cost = (qty * prc).toFixed(2);
+        } else if (!isNaN(cst) && cst > 0) {
+          updated.quantity = (cst / prc).toFixed(2);
+        }
+      }
 
-    if (!formData.vehicle) {
-      newErrors.vehicle = 'Vehicle selection is required';
-    }
-
-    if (!formData.fuelQuantity || Number(formData.fuelQuantity) <= 0) {
-      newErrors.fuelQuantity = 'Fuel quantity must be greater than 0';
-    }
-
-    if (!formData.fuelCost || Number(formData.fuelCost) <= 0) {
-      newErrors.fuelCost = 'Fuel cost must be greater than 0';
-    }
-
-    if (!formData.fuelDate) {
-      newErrors.fuelDate = 'Fuel entry date is required';
-    }
-
-    if (!formData.odometerReading || Number(formData.odometerReading) < 0) {
-      newErrors.odometerReading = 'Odometer reading cannot be negative';
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+      return updated;
+    });
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (validateForm()) {
-      onSubmit(formData);
+    setValidationError('');
+
+    if (!formData.vehicle) {
+      setValidationError('Please select a vehicle.');
+      return;
     }
+    if (!formData.quantity || parseFloat(formData.quantity) <= 0) {
+      setValidationError('Please enter a valid quantity.');
+      return;
+    }
+    if (!formData.cost || parseFloat(formData.cost) <= 0) {
+      setValidationError('Please enter a valid total cost.');
+      return;
+    }
+    if (!formData.date) {
+      setValidationError('Please select a date.');
+      return;
+    }
+
+    onSave({
+      ...formData,
+      quantity: parseFloat(formData.quantity),
+      pricePerUnit: parseFloat(formData.pricePerUnit) || 0,
+      cost: parseFloat(formData.cost),
+      odometer: formData.odometer ? parseInt(formData.odometer, 10) : undefined,
+    });
   };
 
   return (
-    <motion.form
-      onSubmit={handleSubmit}
-      initial={{ opacity: 0, scale: 0.95 }}
-      animate={{ opacity: 1, scale: 1 }}
-      transition={{ duration: 0.2 }}
-      className="card-solid"
-      noValidate
-    >
-      <h3 className="mb-4">{fuelLog ? 'Edit Fuel Purchase Details' : 'Record Fuel Purchase'}</h3>
+    <form onSubmit={handleSubmit} noValidate>
+      {validationError && (
+        <div className="alert alert-danger py-2 px-3 border-0 rounded-3 mb-3 small">
+          {validationError}
+        </div>
+      )}
 
-      <div className="row">
-        {/* Vehicle Selection */}
-        <div className="col-md-6 form-group-custom">
-          <label className="form-label-custom" htmlFor="vehicle">
-            Vehicle Reference
-          </label>
-          <select
-            id="vehicle"
-            name="vehicle"
-            className={`form-control-custom ${errors.vehicle ? 'is-invalid' : ''}`}
-            value={formData.vehicle}
-            onChange={handleChange}
-            disabled={isSubmitting}
-          >
-            <option value="">-- Select Vehicle --</option>
-            {vehicles.map((v) => (
-              <option key={v._id} value={v._id}>
-                {v.vehicleName} ({v.registrationNumber})
-              </option>
-            ))}
-          </select>
-          {errors.vehicle && (
-            <div className="invalid-feedback text-danger text-small mt-1">{errors.vehicle}</div>
-          )}
+      <div className="row g-3">
+        {/* Vehicle */}
+        <div className="col-12 col-md-6">
+          <div className="form-floating">
+            <select
+              id="formVehicle"
+              name="vehicle"
+              className="form-select bg-light border-light"
+              value={formData.vehicle}
+              onChange={handleChange}
+              disabled={loading || fetchingVehicles}
+              required
+            >
+              <option value="">Select Vehicle</option>
+              {vehicles.map((v) => (
+                <option key={v._id} value={v._id}>
+                  {v.registrationNumber} - {v.make} {v.model}
+                </option>
+              ))}
+            </select>
+            <label htmlFor="formVehicle">
+              <FaTruck className="me-2 text-muted" /> Select Vehicle
+            </label>
+          </div>
         </div>
 
-        {/* Trip Selection */}
-        <div className="col-md-6 form-group-custom">
-          <label className="form-label-custom" htmlFor="trip">
-            Associated Trip (Optional)
-          </label>
-          <select
-            id="trip"
-            name="trip"
-            className="form-control-custom"
-            value={formData.trip}
-            onChange={handleChange}
-            disabled={isSubmitting}
-          >
-            <option value="">-- None / Offline Run --</option>
-            {trips.map((t) => (
-              <option key={t._id} value={t._id}>
-                {t.tripNumber || t.tripCode || t._id}
-              </option>
-            ))}
-          </select>
+        {/* Odometer */}
+        <div className="col-12 col-md-6">
+          <div className="form-floating">
+            <input
+              type="number"
+              id="formOdometer"
+              name="odometer"
+              className="form-control bg-light border-light"
+              placeholder="1000"
+              value={formData.odometer}
+              onChange={handleChange}
+              disabled={loading}
+              min="0"
+            />
+            <label htmlFor="formOdometer">
+              <FaRoad className="me-2 text-muted" /> Odometer (km)
+            </label>
+          </div>
         </div>
 
-        {/* Fuel Quantity */}
-        <div className="col-md-6 form-group-custom">
-          <label className="form-label-custom" htmlFor="fuelQuantity">
-            Fuel Quantity (Liters)
-          </label>
-          <input
-            type="number"
-            id="fuelQuantity"
-            name="fuelQuantity"
-            step="0.01"
-            className={`form-control-custom ${errors.fuelQuantity ? 'is-invalid' : ''}`}
-            placeholder="e.g. 50.45"
-            value={formData.fuelQuantity}
-            onChange={handleChange}
-            disabled={isSubmitting}
-          />
-          {errors.fuelQuantity && (
-            <div className="invalid-feedback text-danger text-small mt-1">{errors.fuelQuantity}</div>
-          )}
+        {/* Quantity (Liters) */}
+        <div className="col-12 col-sm-4">
+          <div className="form-floating">
+            <input
+              type="number"
+              id="formQuantity"
+              name="quantity"
+              className="form-control bg-light border-light"
+              placeholder="50"
+              value={formData.quantity}
+              onChange={handleChange}
+              disabled={loading}
+              min="0.1"
+              step="0.1"
+              required
+            />
+            <label htmlFor="formQuantity">
+              <FaGasPump className="me-2 text-muted" /> Liters Filled
+            </label>
+          </div>
+        </div>
+
+        {/* Unit Price per Liter */}
+        <div className="col-12 col-sm-4">
+          <div className="form-floating">
+            <input
+              type="number"
+              id="formPricePerUnit"
+              name="pricePerUnit"
+              className="form-control bg-light border-light"
+              placeholder="1.5"
+              value={formData.pricePerUnit}
+              onChange={handleChange}
+              disabled={loading}
+              min="0.01"
+              step="0.01"
+              required
+            />
+            <label htmlFor="formPricePerUnit">Price per Liter ($)</label>
+          </div>
         </div>
 
         {/* Total Cost */}
-        <div className="col-md-6 form-group-custom">
-          <label className="form-label-custom" htmlFor="fuelCost">
-            Total Purchase Cost ($)
-          </label>
-          <input
-            type="number"
-            id="fuelCost"
-            name="fuelCost"
-            step="0.01"
-            className={`form-control-custom ${errors.fuelCost ? 'is-invalid' : ''}`}
-            placeholder="e.g. 75.50"
-            value={formData.fuelCost}
-            onChange={handleChange}
-            disabled={isSubmitting}
-          />
-          {errors.fuelCost && (
-            <div className="invalid-feedback text-danger text-small mt-1">{errors.fuelCost}</div>
-          )}
+        <div className="col-12 col-sm-4">
+          <div className="form-floating">
+            <input
+              type="number"
+              id="formCost"
+              name="cost"
+              className="form-control bg-light border-light"
+              placeholder="75"
+              value={formData.cost}
+              onChange={handleChange}
+              disabled={loading}
+              min="0.1"
+              step="0.1"
+              required
+            />
+            <label htmlFor="formCost">
+              <FaDollarSign className="me-2 text-muted" /> Total Cost ($)
+            </label>
+          </div>
         </div>
 
-        {/* Odometer Reading */}
-        <div className="col-md-6 form-group-custom">
-          <label className="form-label-custom" htmlFor="odometerReading">
-            Odometer Reading (km)
-          </label>
-          <input
-            type="number"
-            id="odometerReading"
-            name="odometerReading"
-            className={`form-control-custom ${errors.odometerReading ? 'is-invalid' : ''}`}
-            placeholder="e.g. 24800"
-            value={formData.odometerReading}
-            onChange={handleChange}
-            disabled={isSubmitting}
-          />
-          {errors.odometerReading && (
-            <div className="invalid-feedback text-danger text-small mt-1">{errors.odometerReading}</div>
-          )}
-        </div>
-
-        {/* Fuel Date */}
-        <div className="col-md-6 form-group-custom">
-          <label className="form-label-custom" htmlFor="fuelDate">
-            Purchase Date
-          </label>
-          <input
-            type="date"
-            id="fuelDate"
-            name="fuelDate"
-            className={`form-control-custom ${errors.fuelDate ? 'is-invalid' : ''}`}
-            value={formData.fuelDate}
-            onChange={handleChange}
-            disabled={isSubmitting}
-          />
-          {errors.fuelDate && (
-            <div className="invalid-feedback text-danger text-small mt-1">{errors.fuelDate}</div>
-          )}
+        {/* Date */}
+        <div className="col-12 col-sm-6">
+          <div className="form-floating">
+            <input
+              type="date"
+              id="formDate"
+              name="date"
+              className="form-control bg-light border-light"
+              value={formData.date}
+              onChange={handleChange}
+              disabled={loading}
+              required
+            />
+            <label htmlFor="formDate">
+              <FaCalendarAlt className="me-2 text-muted" /> Refueling Date
+            </label>
+          </div>
         </div>
 
         {/* Fuel Station */}
-        <div className="col-12 form-group-custom">
-          <label className="form-label-custom" htmlFor="fuelStation">
-            Fuel Station / Vendor Name
-          </label>
-          <input
-            type="text"
-            id="fuelStation"
-            name="fuelStation"
-            className="form-control-custom"
-            placeholder="e.g. Shell Station #45, West Highway"
-            value={formData.fuelStation}
-            onChange={handleChange}
-            disabled={isSubmitting}
-          />
-        </div>
-
-        {/* Remarks */}
-        <div className="col-12 form-group-custom">
-          <label className="form-label-custom" htmlFor="remarks">
-            Remarks & Notes
-          </label>
-          <textarea
-            id="remarks"
-            name="remarks"
-            rows="2"
-            className="form-control-custom"
-            placeholder="Add any receipt details, notes, or fuel card details..."
-            value={formData.remarks}
-            onChange={handleChange}
-            disabled={isSubmitting}
-            style={{ resize: 'none' }}
-          />
+        <div className="col-12 col-sm-6">
+          <div className="form-floating">
+            <input
+              type="text"
+              id="formStation"
+              name="fuelStation"
+              className="form-control bg-light border-light"
+              placeholder="Station Name"
+              value={formData.fuelStation}
+              onChange={handleChange}
+              disabled={loading}
+            />
+            <label htmlFor="formStation">
+              <FaMapMarkerAlt className="me-2 text-muted" /> Fuel Station Location
+            </label>
+          </div>
         </div>
       </div>
 
-      <div className="d-flex justify-content-end gap-3 mt-4">
+      <div className="d-flex justify-content-end gap-2 mt-4">
         <button
           type="button"
           onClick={onCancel}
-          disabled={isSubmitting}
-          className="btn-custom btn-secondary-custom"
+          className="btn btn-premium-secondary px-4"
+          disabled={loading}
         >
           Cancel
         </button>
         <button
           type="submit"
-          disabled={isSubmitting}
-          className="btn-custom btn-primary-gradient"
+          className="btn btn-premium-primary px-4"
+          disabled={loading}
         >
-          {isSubmitting ? 'Recording...' : fuelLog ? 'Save Updates' : 'Add Fuel Log'}
+          {loading ? 'Processing...' : log ? 'Update Log' : 'Save Log'}
         </button>
       </div>
-    </motion.form>
+    </form>
   );
-};
-
-export default FuelForm;
+}

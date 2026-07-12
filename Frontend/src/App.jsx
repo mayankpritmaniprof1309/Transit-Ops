@@ -8,7 +8,7 @@ import TripPage from './pages/trip/TripPage';
 import MaintenancePage from './pages/maintenance/MaintenancePage';
 import VehiclesPage from './pages/vehicle/VehiclesPage';
 import DriversPage from './pages/driver/DriversPage';
-import FuelPage from './pages/fuel/FuelPage';
+import FuelManagement from './pages/fuel/FuelManagement.jsx';
 import Login from './pages/auth/Login';
 import ExpenseManagement from './pages/expense/ExpenseManagement.jsx';
 import Register from './pages/auth/Register.jsx';
@@ -91,7 +91,7 @@ function App() {
             element={
               <ProtectedRoute>
                 <DashboardLayout>
-                  <FuelPage />
+                  <FuelManagement />
                 </DashboardLayout>
               </ProtectedRoute>
             }
