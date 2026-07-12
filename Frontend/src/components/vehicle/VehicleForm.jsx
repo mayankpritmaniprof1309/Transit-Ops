@@ -208,6 +208,7 @@ export const VehicleForm = ({ vehicle = null, onSubmit, onCancel, isSubmitting =
             <option value="Mini Truck">Mini Truck</option>
             <option value="Pickup">Pickup</option>
             <option value="Trailer">Trailer</option>
+            <option value="Car">Car</option>
             <option value="Other">Other</option>
           </select>
         </div>

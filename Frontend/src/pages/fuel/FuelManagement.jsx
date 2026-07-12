@@ -58,9 +58,89 @@ export default function FuelManagement() {
       const res = await fuelService.getAllFuelLogs(params);
 
       if (res.success) {
-        setLogs(res.data?.fuelLogs || []);
-        setTotalRecords(res.data?.totalRecords || 0);
-        setTotalPages(res.data?.totalPages || 1);
+        let logsList = [];
+        let total = 0;
+        let pages = 1;
+
+        if (Array.isArray(res.data)) {
+          // Flat array from backend - perform robust client-side filtering, sorting, and pagination
+          let filtered = [...res.data];
+
+          // 1. Filter by fuelType
+          if (activeFilters.fuelType) {
+            const fType = activeFilters.fuelType.toLowerCase();
+            filtered = filtered.filter(log => {
+              const vehicleType = log.vehicle?.vehicleType || '';
+              const logFuelType = log.fuelType || '';
+              return logFuelType.toLowerCase() === fType || vehicleType.toLowerCase() === fType;
+            });
+          }
+
+          // 2. Filter by search (vehicle registration plate or fuel station)
+          if (activeFilters.search) {
+            const query = activeFilters.search.toLowerCase();
+            filtered = filtered.filter(log => {
+              const regNum = (log.vehicle?.registrationNumber || '').toLowerCase();
+              const make = (log.vehicle?.make || '').toLowerCase();
+              const model = (log.vehicle?.model || '').toLowerCase();
+              const station = (log.fuelStation || '').toLowerCase();
+              return regNum.includes(query) || make.includes(query) || model.includes(query) || station.includes(query);
+            });
+          }
+
+          // 3. Filter by date range (startDate / endDate)
+          if (activeFilters.startDate) {
+            const fromDate = new Date(activeFilters.startDate);
+            filtered = filtered.filter(log => new Date(log.date) >= fromDate);
+          }
+          if (activeFilters.endDate) {
+            const toDate = new Date(activeFilters.endDate);
+            toDate.setHours(23, 59, 59, 999);
+            filtered = filtered.filter(log => new Date(log.date) <= toDate);
+          }
+
+          // 4. Sort logs
+          filtered.sort((a, b) => {
+            let valA = a[sortBy];
+            let valB = b[sortBy];
+
+            if (sortBy === 'vehicle') {
+              valA = a.vehicle?.registrationNumber || '';
+              valB = b.vehicle?.registrationNumber || '';
+            }
+
+            if (sortBy === 'date') {
+              valA = new Date(a.date || 0).getTime();
+              valB = new Date(b.date || 0).getTime();
+            }
+
+            if (typeof valA === 'string') {
+              return sortOrder === 'asc' 
+                ? valA.localeCompare(valB)
+                : valB.localeCompare(valA);
+            } else {
+              return sortOrder === 'asc'
+                ? (valA || 0) - (valB || 0)
+                : (valB || 0) - (valA || 0);
+            }
+          });
+
+          total = filtered.length;
+          pages = Math.ceil(total / limit) || 1;
+
+          // 5. Paginate client side
+          const startIndex = (page - 1) * limit;
+          logsList = filtered.slice(startIndex, startIndex + limit);
+        } else if (res.data) {
+          // Paginated response shape
+          logsList = res.data.fuelLogs || res.data.data || [];
+          total = res.data.totalRecords || res.data.total || logsList.length;
+          pages = res.data.totalPages || res.data.pages || 1;
+        }
+
+        setLogs(logsList);
+        setTotalRecords(total);
+        setTotalPages(pages);
       }
     } catch (err) {
       console.error(err);
