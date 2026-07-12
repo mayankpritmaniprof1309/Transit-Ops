@@ -1,7 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { FiPlus, FiDownload, FiSearch, FiFilter, FiX } from 'react-icons/fi';
+import { FaPlus } from 'react-icons/fa';
 import TripTable from '../../components/trip/TripTable';
 import TripService from '../../services/trip.service';
+import { getAllDrivers } from '../../services/driver.service.js';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const TripPage = () => {
@@ -14,9 +16,42 @@ const TripPage = () => {
   const [newTrip, setNewTrip] = useState({ route: '', driver: '', vehicle: '', status: 'Scheduled', date: '' });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Searchable Drivers Dropdown State
+  const [drivers, setDrivers] = useState([]);
+  const [driverSearch, setDriverSearch] = useState('');
+  const [isDriverDropdownOpen, setIsDriverDropdownOpen] = useState(false);
+  const dropdownRef = useRef(null);
+
   useEffect(() => {
     loadTrips();
   }, []);
+
+  useEffect(() => {
+    if (isAddModalOpen) {
+      loadDrivers();
+    }
+  }, [isAddModalOpen]);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsDriverDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const loadDrivers = async () => {
+    try {
+      const res = await getAllDrivers();
+      if (res.success) {
+        setDrivers(res.data.drivers || res.data || []);
+      }
+    } catch (error) {
+      console.error("Error loading drivers", error);
+    }
+  };
 
   const loadTrips = async () => {
     setLoading(true);
@@ -82,6 +117,10 @@ const TripPage = () => {
     trip.vehicle?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const filteredDrivers = drivers.filter(d => 
+    (d.fullName || d.name || '').toLowerCase().includes(driverSearch.toLowerCase())
+  );
+
   return (
     <motion.div 
       className="page-container animate-fade-in"
@@ -92,11 +131,11 @@ const TripPage = () => {
       <div className="page-header">
         <h1 className="page-title">Trips Management</h1>
         <div className="d-flex gap-3">
-          <button className="btn-premium-secondary" onClick={handleExport}>
+          <button className="btn-custom btn-secondary-custom shadow-sm" onClick={handleExport}>
             <FiDownload /> Export
           </button>
-          <button className="btn-premium-primary" onClick={() => setIsAddModalOpen(true)}>
-            <FiPlus /> Add Trip
+          <button className="btn-custom btn-primary-gradient shadow-sm" onClick={() => setIsAddModalOpen(true)}>
+            <FaPlus /> Add Trip
           </button>
         </div>
       </div>
@@ -115,7 +154,7 @@ const TripPage = () => {
             />
           </div>
           <div>
-            <button className="btn-premium-secondary">
+            <button className="btn-custom btn-secondary-custom shadow-sm">
               <FiFilter /> Filters
             </button>
           </div>
@@ -164,9 +203,73 @@ const TripPage = () => {
                         <label className="form-label text-secondary fw-semibold small">Route</label>
                         <input type="text" className="form-control" required value={newTrip.route} onChange={e => setNewTrip({...newTrip, route: e.target.value})} placeholder="e.g. NY to Boston" />
                       </div>
-                      <div className="mb-3">
+                      <div className="mb-3 position-relative" ref={dropdownRef}>
                         <label className="form-label text-secondary fw-semibold small">Driver</label>
-                        <input type="text" className="form-control" required value={newTrip.driver} onChange={e => setNewTrip({...newTrip, driver: e.target.value})} placeholder="Driver Name" />
+                        <div 
+                          className="form-control d-flex justify-content-between align-items-center cursor-pointer bg-white"
+                          style={{ minHeight: '38px', borderRadius: '8px', cursor: 'pointer' }}
+                          onClick={() => setIsDriverDropdownOpen(!isDriverDropdownOpen)}
+                        >
+                          <span className={newTrip.driver ? 'text-dark' : 'text-muted'}>
+                            {newTrip.driver || 'Select Driver'}
+                          </span>
+                          <span style={{ fontSize: '10px', color: '#64748b' }}>▼</span>
+                        </div>
+
+                        {/* Hidden input to support HTML5 validation */}
+                        <input
+                          type="text"
+                          required
+                          value={newTrip.driver}
+                          onChange={() => {}}
+                          tabIndex={-1}
+                          style={{ position: 'absolute', opacity: 0, height: 0, width: 0, pointerEvents: 'none' }}
+                        />
+
+                        {isDriverDropdownOpen && (
+                          <div 
+                            className="position-absolute w-100 bg-white border shadow-lg mt-1 p-2" 
+                            style={{ zIndex: 1060, borderRadius: '8px', maxHeight: '250px', overflowY: 'auto' }}
+                          >
+                            <div className="input-group mb-2">
+                              <span className="input-group-text bg-light border-end-0 py-1 px-2">
+                                <FiSearch size={14} className="text-muted" />
+                              </span>
+                              <input
+                                type="text"
+                                className="form-control form-control-sm border-start-0"
+                                placeholder="Search driver by name..."
+                                value={driverSearch}
+                                onChange={(e) => setDriverSearch(e.target.value)}
+                                style={{ fontSize: '13px' }}
+                                autoFocus
+                              />
+                            </div>
+                            <div className="list-group list-group-flush" style={{ maxHeight: '160px', overflowY: 'auto' }}>
+                              {filteredDrivers.length > 0 ? (
+                                filteredDrivers.map((d) => (
+                                  <button
+                                    key={d._id || d.id}
+                                    type="button"
+                                    className="list-group-item list-group-item-action border-0 px-2 py-1.5 rounded text-start"
+                                    onClick={() => {
+                                      setNewTrip({ ...newTrip, driver: d.fullName || d.name });
+                                      setIsDriverDropdownOpen(false);
+                                      setDriverSearch('');
+                                    }}
+                                    style={{ fontSize: '13px' }}
+                                  >
+                                    {d.fullName || d.name}
+                                  </button>
+                                ))
+                              ) : (
+                                <div className="text-center py-2 text-muted" style={{ fontSize: '12px' }}>
+                                  No drivers found
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        )}
                       </div>
                       <div className="row">
                         <div className="col-md-6 mb-3">
@@ -187,8 +290,8 @@ const TripPage = () => {
                         </select>
                       </div>
                       <div className="d-flex justify-content-end gap-2">
-                        <button type="button" className="btn-premium-secondary" onClick={() => setIsAddModalOpen(false)}>Cancel</button>
-                        <button type="submit" className="btn-premium-primary" disabled={isSubmitting}>
+                        <button type="button" className="btn-custom btn-secondary-custom shadow-sm" onClick={() => setIsAddModalOpen(false)}>Cancel</button>
+                        <button type="submit" className="btn-custom btn-primary-gradient shadow-sm" disabled={isSubmitting}>
                           {isSubmitting ? 'Adding...' : 'Add Trip'}
                         </button>
                       </div>

@@ -23,6 +23,12 @@
   /* Transitions */
   --transition-fast: 0.15s cubic-bezier(0.4, 0, 0.2, 1);
   --transition-normal: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* Spacing & radius */
+  --radius-sm: 10px;
+  --radius-md: 14px;
+  --radius-lg: 18px;
+  --radius-xl: 22px;
 }
 
 /* =========================================================================
@@ -91,12 +97,21 @@ html, body {
   box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.04);
 }
 
+.glass-navbar {
+  background: rgba(255, 255, 255, 0.75);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(37, 99, 235, 0.08);
+  box-shadow: 0 2px 12px rgba(15, 23, 42, 0.04);
+}
+
 /* =========================================================================
-   4. CARDS (Solid White & Glass)
+   4. CARDS
    ========================================================================= */
+/* Legacy alias */
 .premium-card {
   background-color: var(--card-bg);
-  border-radius: 18px;
+  border-radius: var(--radius-lg);
   border: 1px solid rgba(15, 23, 42, 0.05);
   box-shadow: 0 4px 20px 0 rgba(15, 23, 42, 0.03);
   transition: transform var(--transition-normal), box-shadow var(--transition-normal);
@@ -104,87 +119,123 @@ html, body {
 }
 
 .premium-card:hover {
-  transform: translateY(-5px);
+  transform: translateY(-3px);
   box-shadow: 0 10px 25px 0 rgba(15, 23, 42, 0.07);
 }
 
+/* Primary card — used in all new pages */
+.card-solid {
+  background-color: #FFFFFF;
+  border-radius: var(--radius-lg);
+  border: 1px solid rgba(15, 23, 42, 0.06);
+  box-shadow: 0 2px 16px rgba(15, 23, 42, 0.04);
+  padding: 1.5rem;
+  transition: box-shadow var(--transition-normal);
+}
+
+.card-solid:hover {
+  box-shadow: 0 6px 24px rgba(15, 23, 42, 0.08);
+}
+
+.hover-lift {
+  transition: transform var(--transition-normal), box-shadow var(--transition-normal);
+}
+
+.hover-lift:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 28px rgba(15, 23, 42, 0.1) !important;
+}
+
 /* =========================================================================
-   5. BUTTONS (Premium layout)
+   5. BUTTONS
    ========================================================================= */
-.btn-premium-primary {
-  background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
-  color: #FFFFFF;
-  border: none;
-  border-radius: 16px;
-  font-weight: 600;
-  padding: 0.65rem 1.4rem;
-  transition: all var(--transition-normal);
-  box-shadow: 0 4px 14px 0 rgba(37, 99, 235, 0.25);
+/* Base button reset */
+.btn-custom {
   display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
-  font-size: 0.9rem;
+  justify-content: center;
+  gap: 0.45rem;
+  font-family: var(--font-family);
+  font-weight: 600;
+  font-size: 0.875rem;
+  padding: 0.55rem 1.2rem;
+  border-radius: var(--radius-md);
+  border: none;
+  cursor: pointer;
+  transition: all var(--transition-normal);
+  white-space: nowrap;
+  line-height: 1.4;
+  text-decoration: none;
 }
 
-.btn-premium-primary:hover {
+.btn-custom:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+/* Primary gradient (blue) */
+.btn-primary-gradient {
+  background: linear-gradient(135deg, #2563EB 0%, #3B82F6 100%);
   color: #FFFFFF;
-  box-shadow: 0 6px 20px 0 rgba(37, 99, 235, 0.4);
-  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.28);
 }
 
-.btn-premium-secondary {
+.btn-primary-gradient:hover:not(:disabled) {
+  background: linear-gradient(135deg, #1d4fd8 0%, #2563EB 100%);
+  box-shadow: 0 6px 20px rgba(37, 99, 235, 0.42);
+  transform: translateY(-1px);
+  color: #FFFFFF;
+}
+
+/* Secondary (white/outline) */
+.btn-secondary-custom {
   background-color: #FFFFFF;
   color: var(--text-primary);
-  border: 1px solid rgba(100, 116, 139, 0.2);
-  border-radius: 16px;
-  font-weight: 600;
-  padding: 0.65rem 1.4rem;
-  transition: all var(--transition-normal);
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-size: 0.9rem;
+  border: 1.5px solid rgba(100, 116, 139, 0.22);
+  box-shadow: 0 1px 4px rgba(15, 23, 42, 0.04);
 }
 
-.btn-premium-secondary:hover {
+.btn-secondary-custom:hover:not(:disabled) {
   background-color: #F8FAFC;
-  border-color: rgba(100, 116, 139, 0.35);
+  border-color: rgba(37, 99, 235, 0.3);
+  color: var(--primary);
   transform: translateY(-1px);
 }
 
-.btn-premium-danger {
+/* Danger (red) */
+.btn-danger-custom {
   background-color: var(--danger);
   color: #FFFFFF;
-  border: none;
-  border-radius: 16px;
-  font-weight: 600;
-  padding: 0.65rem 1.4rem;
-  transition: all var(--transition-normal);
-  box-shadow: 0 4px 14px 0 rgba(239, 68, 68, 0.25);
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-size: 0.9rem;
+  box-shadow: 0 4px 14px rgba(239, 68, 68, 0.22);
 }
 
-.btn-premium-danger:hover {
-  color: #FFFFFF;
-  box-shadow: 0 6px 20px 0 rgba(239, 68, 68, 0.4);
+.btn-danger-custom:hover:not(:disabled) {
+  background-color: #dc2626;
+  box-shadow: 0 6px 20px rgba(239, 68, 68, 0.38);
   transform: translateY(-1px);
+  color: #FFFFFF;
 }
+
+/* Legacy aliases */
+.btn-premium-primary  { composes: btn-custom btn-primary-gradient; }
+.btn-premium-secondary { composes: btn-custom btn-secondary-custom; }
+.btn-premium-danger   { composes: btn-custom btn-danger-custom; }
 
 /* =========================================================================
-   6. SIDEBAR & RESPONSIVENESS
+   6. SIDEBAR & LAYOUT
    ========================================================================= */
 .sidebar-container {
   width: 260px;
   min-height: 100vh;
   background-color: var(--dark-sidebar);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   position: fixed;
   top: 0;
   left: 0;
   z-index: 1030;
+  overflow: hidden;
 }
 
 .sidebar-collapsed {
@@ -194,7 +245,8 @@ html, body {
 .main-content-layout {
   margin-left: 260px;
   min-height: 100vh;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  background: transparent;
 }
 
 .main-content-collapsed {
@@ -214,11 +266,106 @@ html, body {
 }
 
 /* =========================================================================
-   7. TABLE STYLES
+   7. FORMS
    ========================================================================= */
+.form-group-custom {
+  margin-bottom: 1.1rem;
+}
+
+.form-label-custom {
+  display: block;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 0.4rem;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.form-control-custom {
+  width: 100%;
+  padding: 0.6rem 0.9rem;
+  font-size: 0.9rem;
+  font-family: var(--font-family);
+  color: var(--text-primary);
+  background-color: #FFFFFF;
+  border: 1.5px solid rgba(100, 116, 139, 0.2);
+  border-radius: var(--radius-sm);
+  outline: none;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+  appearance: auto;
+}
+
+.form-control-custom:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.form-control-custom.is-invalid {
+  border-color: var(--danger);
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.08);
+}
+
+.form-control-custom::placeholder {
+  color: #94A3B8;
+  font-size: 0.88rem;
+}
+
+/* =========================================================================
+   8. TABLES
+   ========================================================================= */
+.table-responsive-custom {
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  border: 1px solid rgba(15, 23, 42, 0.06);
+  box-shadow: 0 2px 12px rgba(15, 23, 42, 0.03);
+}
+
+.table-custom {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+  background-color: #FFFFFF;
+}
+
+.table-custom thead tr {
+  background: #F8FAFC;
+  border-bottom: 2px solid rgba(15, 23, 42, 0.06);
+}
+
+.table-custom th {
+  padding: 0.85rem 1rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+.table-custom td {
+  padding: 0.9rem 1rem;
+  vertical-align: middle;
+  color: var(--text-primary);
+  border-bottom: 1px solid rgba(15, 23, 42, 0.04);
+}
+
+.table-custom tbody tr {
+  transition: background-color var(--transition-fast);
+}
+
+.table-custom tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.table-custom tbody tr:hover {
+  background-color: rgba(238, 244, 255, 0.4);
+}
+
+/* Legacy alias */
 .premium-table {
   background-color: #FFFFFF;
-  border-radius: 12px;
+  border-radius: var(--radius-md);
   overflow: hidden;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.02);
 }
@@ -248,6 +395,237 @@ html, body {
   background-color: rgba(238, 244, 255, 0.35);
 }
 
+/* =========================================================================
+   9. BADGES / STATUS CHIPS
+   ========================================================================= */
+.badge-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.28rem 0.65rem;
+  border-radius: 99px;
+  font-size: 0.74rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+.badge-status-available {
+  background: rgba(16, 185, 129, 0.12);
+  color: #059669;
+  border: 1px solid rgba(16, 185, 129, 0.2);
+}
+
+.badge-status-on-trip {
+  background: rgba(37, 99, 235, 0.1);
+  color: #2563EB;
+  border: 1px solid rgba(37, 99, 235, 0.18);
+}
+
+.badge-status-in-shop {
+  background: rgba(245, 158, 11, 0.12);
+  color: #B45309;
+  border: 1px solid rgba(245, 158, 11, 0.2);
+}
+
+.badge-status-inactive {
+  background: rgba(100, 116, 139, 0.1);
+  color: #475569;
+  border: 1px solid rgba(100, 116, 139, 0.2);
+}
+
+.badge-status-danger {
+  background: rgba(239, 68, 68, 0.1);
+  color: #DC2626;
+  border: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+/* =========================================================================
+   10. SEARCH BAR
+   ========================================================================= */
+.search-bar-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.search-bar-icon {
+  position: absolute;
+  left: 0.8rem;
+  color: #94A3B8;
+  font-size: 0.85rem;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.search-bar-glass {
+  width: 100%;
+  padding: 0.6rem 0.9rem 0.6rem 2.3rem;
+  font-size: 0.875rem;
+  font-family: var(--font-family);
+  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.85);
+  border: 1.5px solid rgba(100, 116, 139, 0.18);
+  border-radius: var(--radius-sm);
+  outline: none;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.search-bar-glass:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+  background: #FFFFFF;
+}
+
+.search-bar-glass::placeholder {
+  color: #94A3B8;
+}
+
+/* =========================================================================
+   11. PAGINATION
+   ========================================================================= */
+.pagination-custom {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: #FFFFFF;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: var(--radius-sm);
+  padding: 4px;
+  box-shadow: 0 1px 4px rgba(15, 23, 42, 0.04);
+}
+
+.pagination-item {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  font-family: var(--font-family);
+}
+
+.pagination-item:hover:not(:disabled) {
+  background: rgba(37, 99, 235, 0.08);
+  color: var(--primary);
+}
+
+.pagination-item.active {
+  background: var(--primary);
+  color: #FFFFFF;
+  font-weight: 700;
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.3);
+}
+
+.pagination-item:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* =========================================================================
+   12. MODAL OVERLAY
+   ========================================================================= */
+.modal-overlay-custom {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.45);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.modal-content-custom {
+  background: #FFFFFF;
+  border-radius: var(--radius-xl);
+  box-shadow: 0 24px 80px rgba(15, 23, 42, 0.2);
+  width: 100%;
+  max-width: 480px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.modal-header-custom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.1rem 1.5rem;
+  font-weight: 700;
+}
+
+.modal-body-custom {
+  padding: 1.5rem;
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
+
+.modal-footer-custom {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  padding: 1rem 1.5rem;
+  border-top: 1px solid rgba(15, 23, 42, 0.06);
+  background: #FAFAFA;
+}
+
+/* =========================================================================
+   13. SKELETON LOADING
+   ========================================================================= */
+@keyframes shimmer {
+  0%   { background-position: -600px 0; }
+  100% { background-position: 600px 0; }
+}
+
+.skeleton-shimmer {
+  display: block;
+  background: linear-gradient(
+    90deg,
+    #F1F5F9 25%,
+    #E2E8F0 50%,
+    #F1F5F9 75%
+  );
+  background-size: 1200px 100%;
+  animation: shimmer 1.4s linear infinite;
+  border-radius: 6px;
+}
+
+.skeleton-box {
+  height: 1rem;
+  border-radius: 6px;
+}
+
+/* =========================================================================
+   14. TEXT UTILITIES
+   ========================================================================= */
+.text-small {
+  font-size: 0.8rem;
+  line-height: 1.4;
+}
+
+.text-xs {
+  font-size: 0.72rem;
+}
+
+.font-monospace {
+  font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+}
+
+/* =========================================================================
+   15. MISC UTILITIES
+   ========================================================================= */
 /* Floating labels adjustments */
 .form-floating > .form-control:focus ~ label,
 .form-floating > .form-control:not(:placeholder-shown) ~ label,
@@ -258,8 +636,8 @@ html, body {
 
 /* Custom scrollbars */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
 }
 ::-webkit-scrollbar-track {
   background: #F8FAFC;
