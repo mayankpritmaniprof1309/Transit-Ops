@@ -1,0 +1,20 @@
+:root {
+  --color-primary: #2563EB;
+  --color-secondary: #3B82F6;
+  --color-sidebar-bg: #0F172A;
+  --color-bg-start: #F8FAFC;
+  --color-bg-end: #EEF4FF;
+  --color-success: #10B981;
+  --color-warning: #F59E0B;
+  --color-danger: #EF4444;
+  --color-text-primary: #111827;
+  --color-text-secondary: #64748B;
+  --color-card-bg: #FFFFFF;
+  --radius-button: 16px;
+  --radius-card: 18px;
+  --font-family-base: 'Inter', sans-serif;
+}
+
+.app-gradient-bg {
+  background: linear-gradient(180deg, var(--color-bg-start) 0%, var(--color-bg-end) 100%);
+}
