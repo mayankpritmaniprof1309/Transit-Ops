@@ -37,21 +37,21 @@ const TripTable = ({ trips, onEdit, onDelete }) => {
         </thead>
         <tbody>
           {trips.map(trip => (
-            <tr key={trip.id}>
-              <td>#{trip.id}</td>
-              <td>{trip.route}</td>
-              <td>{trip.driver}</td>
-              <td>{trip.vehicle}</td>
-              <td>{trip.date}</td>
+            <tr key={trip._id || trip.id}>
+              <td>#{trip.tripNumber || trip.id}</td>
+              <td>{trip.route || `${trip.source} to ${trip.destination}`}</td>
+              <td>{trip.driver?.fullName || trip.driver?.name || trip.driver || 'Unknown'}</td>
+              <td>{trip.vehicle?.registrationNumber || trip.vehicle?.vehicleName || trip.vehicle || 'Unknown'}</td>
+              <td>{trip.dispatchDate ? new Date(trip.dispatchDate).toLocaleDateString() : trip.date}</td>
               <td>
-                <span className={getStatusBadge(trip.status)}>{trip.status}</span>
+                <span className={getStatusBadge(trip.tripStatus || trip.status)}>{trip.tripStatus || trip.status}</span>
               </td>
               <td>
                 <div className="d-flex gap-2">
                   <button className="btn btn-sm btn-secondary-soft p-2" onClick={() => onEdit(trip)}>
                     <FiEdit />
                   </button>
-                  <button className="btn btn-sm btn-danger-soft p-2" onClick={() => onDelete(trip.id)}>
+                  <button className="btn btn-sm btn-danger-soft p-2" onClick={() => onDelete(trip._id || trip.id)}>
                     <FiTrash2 />
                   </button>
                 </div>

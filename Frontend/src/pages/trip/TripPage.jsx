@@ -81,9 +81,14 @@ const TripPage = () => {
     setLoading(true);
     try {
       const response = await TripService.getAllTrips();
-      setTrips(response.data);
+      if (response.success) {
+        setTrips(response.data.trips || response.data || []);
+      } else {
+        setTrips(Array.isArray(response) ? response : []);
+      }
     } catch (error) {
       console.error("Error loading trips", error);
+      setTrips([]);
     } finally {
       setLoading(false);
     }
@@ -92,7 +97,7 @@ const TripPage = () => {
   const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this trip?")) {
       await TripService.deleteTrip(id);
-      setTrips(trips.filter(t => t.id !== id));
+      setTrips(trips.filter(t => t._id !== id));
     }
   };
 
@@ -105,7 +110,7 @@ const TripPage = () => {
     // Map data to rows
     const csvRows = [
       headers.join(','), // Header row
-      ...filteredTrips.map(t => `${t.id},"${t.route}","${t.driver}","${t.vehicle}",${t.date},${t.status}`)
+      ...filteredTrips.map(t => `${t._id || t.tripNumber},"${t.source} to ${t.destination}","${t.driver?.fullName || 'Unknown'}","${t.vehicle?.registrationNumber || 'Unknown'}",${t.dispatchDate || t.createdAt},${t.tripStatus || t.status}`)
     ];
     
     const csvContent = "data:text/csv;charset=utf-8," + csvRows.join('\n');
@@ -118,24 +123,37 @@ const TripPage = () => {
     document.body.removeChild(link);
   };
 
-  // 2. Add/Edit Functionality
   const handleAddSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
     try {
+      const payload = {
+        source: newTrip.route.split(' to ')[0] || newTrip.route,
+        destination: newTrip.route.split(' to ')[1] || 'Unknown',
+        vehicle: newTrip.vehicleId,
+        driver: newTrip.driverId,
+        tripStatus: newTrip.status,
+        dispatchDate: newTrip.date || undefined
+      };
+
       if (editingTripId) {
-        const response = await TripService.updateTrip(editingTripId, newTrip);
-        setTrips(trips.map(t => t.id === editingTripId ? response.data : t));
+        const response = await TripService.updateTrip(editingTripId, payload);
+        // Refresh full trip list since populated driver/vehicle info is returned or we just reload
+        loadTrips();
       } else {
-        const response = await TripService.createTrip(newTrip);
-        setTrips([...trips, response.data]);
+        // Add create-only required fields
+        payload.tripNumber = `TRP-${Math.floor(Math.random() * 90000) + 10000}`;
+        payload.cargoWeight = 5000;
+        payload.plannedDistance = 100;
+        const response = await TripService.createTrip(payload);
+        loadTrips();
       }
       setIsAddModalOpen(false);
       setEditingTripId(null);
-      setNewTrip({ route: '', driver: '', vehicle: '', status: 'Scheduled', date: '' });
+      setNewTrip({ route: '', driver: '', driverId: null, vehicle: '', vehicleId: null, status: 'Scheduled', date: '' });
     } catch (error) {
       console.error("Error saving trip", error);
-      alert("Failed to save trip");
+      alert("Failed to save trip. Check required fields or validation.");
     } finally {
       setIsSubmitting(false);
     }
@@ -143,22 +161,31 @@ const TripPage = () => {
 
   const handleEditClick = (trip) => {
     setNewTrip({
-      route: trip.route,
-      driver: trip.driver,
-      vehicle: trip.vehicle,
-      status: trip.status,
-      date: trip.date,
+      route: trip.route || `${trip.source} to ${trip.destination}`,
+      driver: trip.driver?.fullName || trip.driver,
+      driverId: trip.driver?._id || trip.driver,
+      vehicle: trip.vehicle?.registrationNumber || trip.vehicle,
+      vehicleId: trip.vehicle?._id || trip.vehicle,
+      status: trip.tripStatus || trip.status,
+      date: trip.dispatchDate ? new Date(trip.dispatchDate).toISOString().split('T')[0] : trip.date,
     });
-    setEditingTripId(trip.id);
+    setEditingTripId(trip._id);
     setIsAddModalOpen(true);
   };
 
-  const filteredTrips = trips.filter(trip => 
-    (trip.route?.toLowerCase().includes(searchTerm.toLowerCase()) || 
-    trip.driver?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    trip.vehicle?.toLowerCase().includes(searchTerm.toLowerCase())) &&
-    (statusFilter === 'All' || trip.status === statusFilter)
-  );
+  const filteredTrips = trips.filter(trip => {
+    const route = trip.route || `${trip.source} to ${trip.destination}` || '';
+    const driverName = trip.driver?.fullName || trip.driver || '';
+    const vehicleName = trip.vehicle?.registrationNumber || trip.vehicle || '';
+    const status = trip.tripStatus || trip.status || '';
+
+    return (
+      (route.toLowerCase().includes(searchTerm.toLowerCase()) || 
+       driverName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+       vehicleName.toLowerCase().includes(searchTerm.toLowerCase())) &&
+      (statusFilter === 'All' || status === statusFilter)
+    );
+  });
 
   const filteredDrivers = drivers.filter(d => 
     (d.fullName || d.name || '').toLowerCase().includes(driverSearch.toLowerCase())
@@ -320,7 +347,7 @@ const TripPage = () => {
                                     type="button"
                                     className="list-group-item list-group-item-action border-0 px-2 py-1.5 rounded text-start"
                                     onClick={() => {
-                                      setNewTrip({ ...newTrip, driver: d.fullName || d.name });
+                                      setNewTrip({ ...newTrip, driver: d.fullName || d.name, driverId: d._id || d.id });
                                       setIsDriverDropdownOpen(false);
                                       setDriverSearch('');
                                     }}
@@ -389,7 +416,7 @@ const TripPage = () => {
                                       type="button"
                                       className="list-group-item list-group-item-action border-0 px-2 py-1.5 rounded text-start"
                                       onClick={() => {
-                                        setNewTrip({ ...newTrip, vehicle: v.registrationNumber || v.vehicleName });
+                                        setNewTrip({ ...newTrip, vehicle: v.registrationNumber || v.vehicleName, vehicleId: v._id || v.id });
                                         setIsVehicleDropdownOpen(false);
                                         setVehicleSearch('');
                                       }}
