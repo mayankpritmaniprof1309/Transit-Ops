@@ -1,56 +1,73 @@
 import api from './api.js';
 
 /**
- * Fetch aggregated reports data with optional filters (dateFrom, dateTo, vehicle, type).
- * @param {Object} params - Query parameters.
- * @returns {Promise<Object>} API response data.
+ * Fetch the general analytics dashboard report.
+ * @param {Object} params - Optional query filters (startDate, endDate, vehicleId).
+ * @returns {Promise<Object>} API response.
  */
-export const getReports = async (params = {}) => {
-  const response = await api.get('/reports', { params });
+export const getDashboardReport = async (params = {}) => {
+  const response = await api.get('/reports/dashboard', { params });
   return response.data;
 };
 
 /**
- * Fetch expense summary grouped by category.
- * @param {Object} params - Query parameters (dateFrom, dateTo, vehicle).
- * @returns {Promise<Object>} API response data.
+ * Fetch fuel efficiency analysis per completed trip.
+ * @param {Object} params - Optional query filters (startDate, endDate, vehicleId).
+ * @returns {Promise<Object>} API response.
  */
-export const getExpenseReport = async (params = {}) => {
-  const response = await api.get('/reports/expenses', { params });
+export const getFuelEfficiencyReport = async (params = {}) => {
+  const response = await api.get('/reports/fuel-efficiency', { params });
   return response.data;
 };
 
 /**
- * Fetch fuel usage summary grouped by vehicle.
- * @param {Object} params - Query parameters (dateFrom, dateTo, vehicle).
- * @returns {Promise<Object>} API response data.
+ * Fetch operational cost breakdown (fuel + maintenance + expenses) per vehicle.
+ * @param {Object} params - Optional query filters (startDate, endDate, vehicleId).
+ * @returns {Promise<Object>} API response.
  */
-export const getFuelReport = async (params = {}) => {
-  const response = await api.get('/reports/fuel', { params });
+export const getOperationalCostReport = async (params = {}) => {
+  const response = await api.get('/reports/operational-cost', { params });
   return response.data;
 };
 
 /**
- * Trigger CSV export for expense or fuel report.
- * @param {string} type - 'expenses' | 'fuel'
- * @param {Object} params - Query parameters.
- * @returns {Promise<Blob>} File blob for download.
+ * Fetch vehicle Return on Investment (ROI) analytics.
+ * @param {Object} params - Optional query filters (startDate, endDate).
+ * @returns {Promise<Object>} API response.
  */
-export const exportCSV = async (type = 'expenses', params = {}) => {
-  const response = await api.get(`/reports/export/${type}`, {
-    params,
-    responseType: 'blob',
-  });
+export const getVehicleROIReport = async (params = {}) => {
+  const response = await api.get('/reports/vehicle-roi', { params });
   return response.data;
 };
 
 /**
- * Trigger PDF export for combined fleet report.
- * @param {Object} params - Query parameters.
- * @returns {Promise<Blob>} File blob for download.
+ * Fetch trips report with pagination and filters.
+ * @param {Object} params - Optional query filters (startDate, endDate, vehicleId, status, page, limit).
+ * @returns {Promise<Object>} API response.
  */
-export const exportPDF = async (params = {}) => {
-  const response = await api.get('/reports/export/pdf', {
+export const getTripReport = async (params = {}) => {
+  const response = await api.get('/reports/trips', { params });
+  return response.data;
+};
+
+/**
+ * Fetch vehicle-wise detailed report.
+ * @param {string} vehicleId - Target vehicle ID.
+ * @param {Object} params - Optional query filters.
+ * @returns {Promise<Object>} API response.
+ */
+export const getVehicleWiseReport = async (vehicleId, params = {}) => {
+  const response = await api.get(`/reports/vehicle/${vehicleId}`, { params });
+  return response.data;
+};
+
+/**
+ * Export report data as a downloadable CSV blob.
+ * @param {Object} params - Query params including `type` (fuel|expenses|trips|maintenance).
+ * @returns {Promise<Blob>} Binary CSV blob.
+ */
+export const exportCSV = async (params = {}) => {
+  const response = await api.get('/reports/export/csv', {
     params,
     responseType: 'blob',
   });
