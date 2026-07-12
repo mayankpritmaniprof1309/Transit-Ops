@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import * as tripController from '../controllers/trip.controller.js';
-import { authenticate, authorize } from '../middleware/auth.middleware.js';
+import { protect, authorize } from '../middleware/auth.js';
 import * as tripValidation from '../validations/trip.validation.js';
 
 const router = Router();
@@ -16,7 +16,7 @@ const FULL_ACCESS_ROLES = ['Fleet Manager', 'Dispatcher'];
  */
 router.get(
   '/',
-  authenticate,
+  protect,
   authorize(...ALL_ROLES),
   tripController.getAllTrips
 );
@@ -28,7 +28,7 @@ router.get(
  */
 router.get(
   '/:id',
-  authenticate,
+  protect,
   authorize(...ALL_ROLES),
   tripValidation.getTripByIdValidation,
   tripController.getTripById
@@ -41,7 +41,7 @@ router.get(
  */
 router.post(
   '/',
-  authenticate,
+  protect,
   authorize(...FULL_ACCESS_ROLES),
   tripValidation.createTripValidation,
   tripController.createTrip
@@ -54,7 +54,7 @@ router.post(
  */
 router.put(
   '/:id',
-  authenticate,
+  protect,
   authorize(...FULL_ACCESS_ROLES),
   tripValidation.updateTripValidation,
   tripController.updateTrip
@@ -67,7 +67,7 @@ router.put(
  */
 router.delete(
   '/:id',
-  authenticate,
+  protect,
   authorize(...FULL_ACCESS_ROLES),
   tripValidation.deleteTripValidation,
   tripController.deleteTrip
@@ -80,7 +80,7 @@ router.delete(
  */
 router.patch(
   '/:id/dispatch',
-  authenticate,
+  protect,
   authorize(...FULL_ACCESS_ROLES),
   tripValidation.dispatchTripValidation,
   tripController.dispatchTrip
@@ -93,7 +93,7 @@ router.patch(
  */
 router.patch(
   '/:id/complete',
-  authenticate,
+  protect,
   authorize(...FULL_ACCESS_ROLES),
   tripValidation.completeTripValidation,
   tripController.completeTrip
@@ -106,7 +106,7 @@ router.patch(
  */
 router.patch(
   '/:id/cancel',
-  authenticate,
+  protect,
   authorize(...FULL_ACCESS_ROLES),
   tripValidation.cancelTripValidation,
   tripController.cancelTrip
