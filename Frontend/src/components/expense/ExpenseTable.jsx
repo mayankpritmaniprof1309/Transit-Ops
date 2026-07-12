@@ -43,8 +43,8 @@ export const ExpenseTable = ({ expenses, onEdit, onDelete }) => {
             <th>Type</th>
             <th>Amount</th>
             <th>Date</th>
-            <th>Payment Method</th>
-            <th>Assigned Trip</th>
+            <th>Payment</th>
+            <th>Trip</th>
             <th>Receipt</th>
             <th>Description</th>
             <th className="text-end">Actions</th>
@@ -55,6 +55,7 @@ export const ExpenseTable = ({ expenses, onEdit, onDelete }) => {
             const vehicleName = exp.vehicle?.vehicleName || exp.vehicle?.registrationNumber || 'Unknown Vehicle';
             const regNumber = exp.vehicle?.registrationNumber || 'N/A';
             const tripNumber = exp.trip?.tripNumber || exp.trip?.tripCode || 'N/A';
+            const safeAmount = Number(exp.amount) || 0;
 
             return (
               <motion.tr
@@ -74,8 +75,10 @@ export const ExpenseTable = ({ expenses, onEdit, onDelete }) => {
                     {exp.expenseType}
                   </span>
                 </td>
-                <td className="fw-bold text-dark">${exp.amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
-                <td>{new Date(exp.expenseDate).toLocaleDateString()}</td>
+                <td className="fw-bold text-dark">
+                  ${safeAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                </td>
+                <td>{exp.expenseDate ? new Date(exp.expenseDate).toLocaleDateString() : 'N/A'}</td>
                 <td>{exp.paymentMethod || 'N/A'}</td>
                 <td>
                   {exp.trip ? (
@@ -96,14 +99,14 @@ export const ExpenseTable = ({ expenses, onEdit, onDelete }) => {
                   )}
                 </td>
                 <td style={{ maxWidth: '200px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={exp.description}>
-                  {exp.description || 'N/A'}
+                  {exp.description || '—'}
                 </td>
                 <td className="text-end">
                   <div className="d-inline-flex gap-2">
                     <button
                       onClick={() => onEdit && onEdit(exp)}
                       className="btn-custom btn-secondary-custom p-2 rounded-circle border-primary text-primary"
-                      title="Edit Log"
+                      title="Edit"
                       style={{ width: '36px', height: '36px', justifyContent: 'center' }}
                     >
                       <FaEdit />
@@ -111,7 +114,7 @@ export const ExpenseTable = ({ expenses, onEdit, onDelete }) => {
                     <button
                       onClick={() => onDelete && onDelete(exp._id || exp)}
                       className="btn-custom btn-danger-custom p-2 rounded-circle"
-                      title="Delete Log"
+                      title="Delete"
                       style={{ width: '36px', height: '36px', justifyContent: 'center' }}
                     >
                       <FaTrashAlt />

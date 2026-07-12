@@ -12,17 +12,13 @@ import FuelPage from './pages/fuel/FuelPage';
 import Login from './pages/auth/Login';
 import ExpensePage from './pages/expense/ExpensePage';
 import Register from './pages/auth/Register.jsx';
+import Reports from './pages/reports/Reports.jsx';
 import ForgotPassword from './pages/auth/ForgotPassword.jsx';
 import ResetPassword from './pages/auth/ResetPassword.jsx';
 
 import Settings from './pages/settings/Settings.jsx';
 
-const Reports = () => (
-  <div className="p-4 bg-white rounded-4 shadow-sm">
-    <h2>Reports Page</h2>
-    <p className="text-secondary">Fleet ROI and efficiency stats reports placeholder.</p>
-  </div>
-);
+
 
 function App() {
   return (

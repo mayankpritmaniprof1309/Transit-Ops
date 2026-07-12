@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FaPlus, FaMoneyBillWave, FaThLarge, FaList, FaTrash, FaTimes } from 'react-icons/fa';
 import { getAllExpenses, deleteExpense } from '../../services/expense.service.js';
@@ -10,44 +10,42 @@ import ExpenseFilter from '../../components/expense/ExpenseFilter.jsx';
 /**
  * Expense Listing Directory page container.
  * @param {Object} props
- * @param {Function} props.onAddNew - Triggered to navigate to AddExpense creation screen.
- * @param {Function} props.onEdit - Triggered to navigate to EditExpense editing screen.
+ * @param {Function} props.onAddNew - Navigate to AddExpense screen.
+ * @param {Function} props.onEdit - Navigate to EditExpense screen.
  */
 export const ExpenseList = ({ onAddNew, onEdit }) => {
   const [expenses, setExpenses] = useState([]);
   const [vehicles, setVehicles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  
-  // View Settings
-  const [viewMode, setViewMode] = useState('grid'); // 'grid' | 'table'
 
-  // Filter params
+  // View mode
+  const [viewMode, setViewMode] = useState('grid');
+
+  // Filters
   const [search, setSearch] = useState('');
   const [selectedVehicle, setSelectedVehicle] = useState('');
   const [selectedType, setSelectedType] = useState('');
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalExpenses, setTotalExpenses] = useState(0);
-  const limit = 8;
+  const LIMIT = 8;
 
-  // Delete Confirm Dialog state
+  // Delete dialog
   const [deleteTargetId, setDeleteTargetId] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  // Debounced search trigger reset
+  // Reset page when filters change
   useEffect(() => {
     setPage(1);
   }, [search, selectedVehicle, selectedType]);
 
-  // Load Vehicles for filter dropdown list
+  // Load vehicles for filter dropdown
   useEffect(() => {
     const loadVehicles = async () => {
       try {
-        const res = await getAllVehicles({ limit: 100 });
-        if (res.success) {
-          setVehicles(res.data || []);
-        }
+        const res = await getAllVehicles();
+        if (res.success) setVehicles(res.data || []);
       } catch (err) {
         console.error('Failed to load filter vehicles:', err);
       }
@@ -55,15 +53,12 @@ export const ExpenseList = ({ onAddNew, onEdit }) => {
     loadVehicles();
   }, []);
 
-  // Fetch expense logs matching filter parameters
-  const loadExpenses = async () => {
+  // Fetch expenses — useCallback prevents infinite render loop
+  const loadExpenses = useCallback(async () => {
     try {
       setLoading(true);
       setError('');
-      const params = {
-        page,
-        limit,
-      };
+      const params = { page, limit: LIMIT };
       if (search.trim()) params.search = search.trim();
       if (selectedVehicle) params.vehicle = selectedVehicle;
       if (selectedType) params.expenseType = selectedType;
@@ -72,7 +67,7 @@ export const ExpenseList = ({ onAddNew, onEdit }) => {
       if (res.success) {
         setExpenses(res.data || []);
         setTotalPages(res.pagination?.pages || 1);
-        setTotalExpenses(res.pagination?.total || (res.data?.length || 0));
+        setTotalExpenses(res.pagination?.total ?? res.data?.length ?? 0);
       } else {
         setError(res.message || 'Failed to retrieve expense directory');
       }
@@ -82,15 +77,13 @@ export const ExpenseList = ({ onAddNew, onEdit }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [page, search, selectedVehicle, selectedType]);
 
   useEffect(() => {
     loadExpenses();
-  }, [page, search, selectedVehicle, selectedType]);
+  }, [loadExpenses]);
 
-  const handleDeleteTrigger = (id) => {
-    setDeleteTargetId(id);
-  };
+  const handleDeleteTrigger = (id) => setDeleteTargetId(id);
 
   const handleConfirmDelete = async () => {
     if (!deleteTargetId) return;
@@ -144,45 +137,45 @@ export const ExpenseList = ({ onAddNew, onEdit }) => {
         onClearFilters={handleClearFilters}
       />
 
-      {/* Error Alert Display */}
+      {/* Error Alert */}
       {error && (
         <div className="alert alert-danger border-0 rounded-3 mb-4 shadow-sm" role="alert">
           {error}
         </div>
       )}
 
-      {/* Display Switch & Counters */}
+      {/* View Switch & Count */}
       <div className="d-flex justify-content-between align-items-center mb-3">
         <span className="text-small text-muted fw-semibold">
           Showing {expenses.length} of {totalExpenses} expenses
         </span>
-        <div className="pagination-custom p-1" style={{ boxShadow: 'none' }}>
+        <div className="d-flex gap-1">
           <button
             onClick={() => setViewMode('grid')}
             className={`pagination-item ${viewMode === 'grid' ? 'active' : ''}`}
             title="Grid view"
-            style={{ width: '32px', height: '32px' }}
+            style={{ width: '34px', height: '34px' }}
           >
-            <FaThLarge size={14} />
+            <FaThLarge size={13} />
           </button>
           <button
             onClick={() => setViewMode('table')}
             className={`pagination-item ${viewMode === 'table' ? 'active' : ''}`}
-            title="Table list"
-            style={{ width: '32px', height: '32px' }}
+            title="Table view"
+            style={{ width: '34px', height: '34px' }}
           >
-            <FaList size={14} />
+            <FaList size={13} />
           </button>
         </div>
       </div>
 
-      {/* Main Content Layout */}
+      {/* Main Content */}
       {loading ? (
         <div className="row g-3">
-          {[...Array(4)].map((_, idx) => (
+          {[...Array(LIMIT)].map((_, idx) => (
             <div key={idx} className="col-md-6 col-lg-3">
               <div className="card-solid p-4">
-                <div className="skeleton-shimmer skeleton-box w-75 mb-3" style={{ height: '1.5rem' }}></div>
+                <div className="skeleton-shimmer skeleton-box w-75 mb-3" style={{ height: '1.25rem' }}></div>
                 <div className="skeleton-shimmer skeleton-box w-50 mb-3"></div>
                 <div className="skeleton-shimmer skeleton-box w-100 mb-3"></div>
                 <div className="skeleton-shimmer skeleton-box w-25"></div>
@@ -195,7 +188,7 @@ export const ExpenseList = ({ onAddNew, onEdit }) => {
           <div className="d-inline-flex bg-light p-3 rounded-circle text-muted mb-3 fs-1">💵</div>
           <h3 className="mb-2">No expenses documented</h3>
           <p className="text-muted mb-4" style={{ maxWidth: '400px', margin: '0 auto' }}>
-            No expense records match your search criteria. Try modifying your filters or insert a new expense log.
+            No expense records match your search criteria. Try modifying your filters or log a new expense.
           </p>
           <button onClick={onAddNew} className="btn-custom btn-secondary-custom">
             Log First Expense
@@ -203,15 +196,17 @@ export const ExpenseList = ({ onAddNew, onEdit }) => {
         </div>
       ) : viewMode === 'grid' ? (
         <div className="row g-3">
-          {expenses.map((exp) => (
-            <div key={exp._id} className="col-12 col-md-6 col-lg-3">
-              <ExpenseCard
-                expense={exp}
-                onEdit={onEdit}
-                onDelete={handleDeleteTrigger}
-              />
-            </div>
-          ))}
+          <AnimatePresence>
+            {expenses.map((exp) => (
+              <div key={exp._id} className="col-12 col-md-6 col-lg-3">
+                <ExpenseCard
+                  expense={exp}
+                  onEdit={onEdit}
+                  onDelete={handleDeleteTrigger}
+                />
+              </div>
+            ))}
+          </AnimatePresence>
         </div>
       ) : (
         <ExpenseTable
@@ -221,7 +216,7 @@ export const ExpenseList = ({ onAddNew, onEdit }) => {
         />
       )}
 
-      {/* Pagination Row */}
+      {/* Pagination */}
       {totalPages > 1 && (
         <div className="d-flex justify-content-center mt-5">
           <div className="pagination-custom">
@@ -252,7 +247,7 @@ export const ExpenseList = ({ onAddNew, onEdit }) => {
         </div>
       )}
 
-      {/* Delete Confirmation Modal Overlay */}
+      {/* Delete Confirmation Modal */}
       <AnimatePresence>
         {deleteTargetId && (
           <div className="modal-overlay-custom">
@@ -264,20 +259,19 @@ export const ExpenseList = ({ onAddNew, onEdit }) => {
             >
               <div className="modal-header-custom bg-danger text-white">
                 <h5 className="modal-title m-0 d-flex align-items-center gap-2">
-                  <FaTrash /> Remove Expense Item?
+                  <FaTrash /> Remove Expense?
                 </h5>
                 <button
                   type="button"
-                  className="btn-close btn-close-white"
                   onClick={() => setDeleteTargetId(null)}
-                  style={{ background: 'none', border: 'none', color: '#fff', fontSize: '1.25rem' }}
+                  style={{ background: 'none', border: 'none', color: '#fff', fontSize: '1.25rem', cursor: 'pointer' }}
                 >
                   <FaTimes />
                 </button>
               </div>
               <div className="modal-body-custom">
                 <p className="mb-0">
-                  Are you absolutely certain you want to discard this expense item record? This action is permanent and cannot be undone.
+                  Are you certain you want to permanently remove this expense record? This action cannot be undone.
                 </p>
               </div>
               <div className="modal-footer-custom">

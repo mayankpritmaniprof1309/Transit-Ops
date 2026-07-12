@@ -1,5 +1,5 @@
 import React from 'react';
-import { FaSearch, FaFilter } from 'react-icons/fa';
+import { FaSearch, FaFilter, FaTimes } from 'react-icons/fa';
 
 /**
  * Filter bar panel component for Fuel logs.
@@ -8,7 +8,11 @@ import { FaSearch, FaFilter } from 'react-icons/fa';
  * @param {Function} props.onSearchChange - Action triggered when typing search query.
  * @param {string} props.selectedVehicle - Current selected filter vehicle.
  * @param {Function} props.onVehicleChange - Action triggered when filter vehicle changes.
- * @param {Array} props.vehicles - Array of vehicle details to list in option selection.
+ * @param {Array} props.vehicles - Array of vehicle details.
+ * @param {string} props.dateFrom - Start date filter.
+ * @param {Function} props.onDateFromChange - Action triggered when start date changes.
+ * @param {string} props.dateTo - End date filter.
+ * @param {Function} props.onDateToChange - Action triggered when end date changes.
  * @param {Function} props.onClearFilters - Action triggered when clicking clear.
  */
 export const FuelFilter = ({
@@ -17,13 +21,19 @@ export const FuelFilter = ({
   selectedVehicle,
   onVehicleChange,
   vehicles = [],
+  dateFrom = '',
+  onDateFromChange,
+  dateTo = '',
+  onDateToChange,
   onClearFilters,
 }) => {
+  const hasFilters = searchVal || selectedVehicle || dateFrom || dateTo;
+
   return (
-    <div className="glass-navbar border rounded-3 p-3 mb-4 d-flex flex-wrap align-items-center justify-content-between gap-3">
-      <div className="d-flex align-items-center gap-3 flex-grow-1 flex-sm-nowrap">
-        {/* Search Input (Glass style) */}
-        <div className="search-bar-container flex-grow-1" style={{ maxWidth: '350px' }}>
+    <div className="glass-navbar border rounded-3 p-3 mb-4">
+      <div className="d-flex flex-wrap align-items-center gap-3">
+        {/* Search Input */}
+        <div className="search-bar-container flex-grow-1" style={{ maxWidth: '280px', minWidth: '180px' }}>
           <FaSearch className="search-bar-icon" />
           <input
             type="text"
@@ -34,34 +44,63 @@ export const FuelFilter = ({
           />
         </div>
 
-        {/* Vehicle Filter Dropdown (Glass style) */}
+        {/* Vehicle Filter */}
         <div className="d-flex align-items-center gap-2">
-          <FaFilter className="text-muted text-small" />
+          <FaFilter className="text-muted" style={{ fontSize: '0.75rem' }} />
           <select
-            className="form-select border-0 text-small fw-semibold bg-light text-dark shadow-sm"
-            style={{ borderRadius: '12px', padding: '0.6rem 2.2rem 0.6rem 1.2rem', cursor: 'pointer' }}
+            className="form-control-custom py-2"
+            style={{ minWidth: '140px', borderRadius: '10px', fontSize: '0.85rem' }}
             value={selectedVehicle}
             onChange={(e) => onVehicleChange(e.target.value)}
           >
             <option value="">All Vehicles</option>
             {vehicles.map((v) => (
               <option key={v._id} value={v._id}>
-                {v.registrationNumber}
+                {v.registrationNumber || v.vehicleName}
               </option>
             ))}
           </select>
         </div>
-      </div>
 
-      {(searchVal || selectedVehicle) && (
-        <button
-          onClick={onClearFilters}
-          className="btn btn-link text-small text-decoration-none text-muted p-0"
-          style={{ cursor: 'pointer' }}
-        >
-          Reset Filters
-        </button>
-      )}
+        {/* Date From */}
+        {onDateFromChange && (
+          <div className="d-flex align-items-center gap-2">
+            <label className="text-muted fw-semibold mb-0" style={{ fontSize: '0.8rem', whiteSpace: 'nowrap' }}>From:</label>
+            <input
+              type="date"
+              className="form-control-custom py-2"
+              style={{ minWidth: '140px', borderRadius: '10px', fontSize: '0.85rem' }}
+              value={dateFrom}
+              onChange={(e) => onDateFromChange(e.target.value)}
+            />
+          </div>
+        )}
+
+        {/* Date To */}
+        {onDateToChange && (
+          <div className="d-flex align-items-center gap-2">
+            <label className="text-muted fw-semibold mb-0" style={{ fontSize: '0.8rem', whiteSpace: 'nowrap' }}>To:</label>
+            <input
+              type="date"
+              className="form-control-custom py-2"
+              style={{ minWidth: '140px', borderRadius: '10px', fontSize: '0.85rem' }}
+              value={dateTo}
+              onChange={(e) => onDateToChange(e.target.value)}
+            />
+          </div>
+        )}
+
+        {/* Clear Filters */}
+        {hasFilters && (
+          <button
+            onClick={onClearFilters}
+            className="btn-custom btn-secondary-custom py-2 px-3 d-flex align-items-center gap-2"
+            style={{ fontSize: '0.82rem', borderRadius: '10px' }}
+          >
+            <FaTimes size={10} /> Clear
+          </button>
+        )}
+      </div>
     </div>
   );
 };

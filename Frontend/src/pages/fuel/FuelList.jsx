@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FaPlus, FaGasPump, FaThLarge, FaList, FaTrash, FaTimes } from 'react-icons/fa';
 import { getAllFuelLogs, deleteFuelLog } from '../../services/fuel.service.js';
@@ -10,43 +10,43 @@ import FuelFilter from '../../components/fuel/FuelFilter.jsx';
 /**
  * FuelLog Listing Directory page container.
  * @param {Object} props
- * @param {Function} props.onAddNew - Triggered to navigate to AddFuel creation screen.
- * @param {Function} props.onEdit - Triggered to navigate to EditFuel editing screen.
+ * @param {Function} props.onAddNew - Navigate to AddFuel screen.
+ * @param {Function} props.onEdit - Navigate to EditFuel screen.
  */
 export const FuelList = ({ onAddNew, onEdit }) => {
   const [logs, setLogs] = useState([]);
   const [vehicles, setVehicles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  
-  // View Settings
-  const [viewMode, setViewMode] = useState('grid'); // 'grid' | 'table'
 
-  // Filter params
+  // View mode
+  const [viewMode, setViewMode] = useState('grid');
+
+  // Filters
   const [search, setSearch] = useState('');
   const [selectedVehicle, setSelectedVehicle] = useState('');
+  const [dateFrom, setDateFrom] = useState('');
+  const [dateTo, setDateTo] = useState('');
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalLogs, setTotalLogs] = useState(0);
-  const limit = 8;
+  const LIMIT = 8;
 
-  // Delete Confirm Dialog state
+  // Delete dialog
   const [deleteTargetId, setDeleteTargetId] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  // Debounced search trigger (local mock support or dependency cascade)
+  // Reset page when filters change
   useEffect(() => {
-    setPage(1); // Reset page on filter changes
-  }, [search, selectedVehicle]);
+    setPage(1);
+  }, [search, selectedVehicle, dateFrom, dateTo]);
 
-  // Load Vehicles for filter dropdown list
+  // Load vehicles for filter dropdown
   useEffect(() => {
     const loadVehicles = async () => {
       try {
-        const res = await getAllVehicles({ limit: 100 });
-        if (res.success) {
-          setVehicles(res.data || []);
-        }
+        const res = await getAllVehicles();
+        if (res.success) setVehicles(res.data || []);
       } catch (err) {
         console.error('Failed to load filter vehicles:', err);
       }
@@ -54,24 +54,22 @@ export const FuelList = ({ onAddNew, onEdit }) => {
     loadVehicles();
   }, []);
 
-  // Fetch fuel logs matching filter parameters
-  const loadFuelLogs = async () => {
+  // Fetch fuel logs — useCallback prevents infinite loop
+  const loadFuelLogs = useCallback(async () => {
     try {
       setLoading(true);
       setError('');
-      const params = {
-        page,
-        limit,
-      };
+      const params = { page, limit: LIMIT };
       if (search.trim()) params.search = search.trim();
       if (selectedVehicle) params.vehicle = selectedVehicle;
+      if (dateFrom) params.dateFrom = dateFrom;
+      if (dateTo) params.dateTo = dateTo;
 
       const res = await getAllFuelLogs(params);
       if (res.success) {
         setLogs(res.data || []);
-        // Safely extract pagination attributes
         setTotalPages(res.pagination?.pages || 1);
-        setTotalLogs(res.pagination?.total || (res.data?.length || 0));
+        setTotalLogs(res.pagination?.total ?? res.data?.length ?? 0);
       } else {
         setError(res.message || 'Failed to retrieve fuel log directory');
       }
@@ -81,15 +79,13 @@ export const FuelList = ({ onAddNew, onEdit }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [page, search, selectedVehicle, dateFrom, dateTo]);
 
   useEffect(() => {
     loadFuelLogs();
-  }, [page, search, selectedVehicle]);
+  }, [loadFuelLogs]);
 
-  const handleDeleteTrigger = (id) => {
-    setDeleteTargetId(id);
-  };
+  const handleDeleteTrigger = (id) => setDeleteTargetId(id);
 
   const handleConfirmDelete = async () => {
     if (!deleteTargetId) return;
@@ -113,6 +109,8 @@ export const FuelList = ({ onAddNew, onEdit }) => {
   const handleClearFilters = () => {
     setSearch('');
     setSelectedVehicle('');
+    setDateFrom('');
+    setDateTo('');
   };
 
   return (
@@ -121,7 +119,7 @@ export const FuelList = ({ onAddNew, onEdit }) => {
       <div className="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-3 mb-4">
         <div>
           <h1 className="mb-1 text-dark d-flex align-items-center gap-2">
-            <FaGasPump className="text-primary" /> Fuel Log History
+            <FaGasPump className="text-primary" /> Fuel Logs
           </h1>
           <p className="text-muted mb-0">Record, inspect, and analyze vehicle refueling activities.</p>
         </div>
@@ -130,55 +128,59 @@ export const FuelList = ({ onAddNew, onEdit }) => {
         </button>
       </div>
 
-      {/* Filter Options Panel */}
+      {/* Filter Panel */}
       <FuelFilter
         searchVal={search}
         onSearchChange={setSearch}
         selectedVehicle={selectedVehicle}
         onVehicleChange={setSelectedVehicle}
         vehicles={vehicles}
+        dateFrom={dateFrom}
+        onDateFromChange={setDateFrom}
+        dateTo={dateTo}
+        onDateToChange={setDateTo}
         onClearFilters={handleClearFilters}
       />
 
-      {/* Error Alert Display */}
+      {/* Error Alert */}
       {error && (
         <div className="alert alert-danger border-0 rounded-3 mb-4 shadow-sm" role="alert">
           {error}
         </div>
       )}
 
-      {/* Display View Mode Switch & Counters */}
+      {/* View Switch & Count */}
       <div className="d-flex justify-content-between align-items-center mb-3">
         <span className="text-small text-muted fw-semibold">
           Showing {logs.length} of {totalLogs} logs
         </span>
-        <div className="pagination-custom p-1" style={{ boxShadow: 'none' }}>
+        <div className="d-flex gap-1">
           <button
             onClick={() => setViewMode('grid')}
             className={`pagination-item ${viewMode === 'grid' ? 'active' : ''}`}
             title="Grid view"
-            style={{ width: '32px', height: '32px' }}
+            style={{ width: '34px', height: '34px' }}
           >
-            <FaThLarge size={14} />
+            <FaThLarge size={13} />
           </button>
           <button
             onClick={() => setViewMode('table')}
             className={`pagination-item ${viewMode === 'table' ? 'active' : ''}`}
-            title="Table list"
-            style={{ width: '32px', height: '32px' }}
+            title="Table view"
+            style={{ width: '34px', height: '34px' }}
           >
-            <FaList size={14} />
+            <FaList size={13} />
           </button>
         </div>
       </div>
 
-      {/* Main Content Layout */}
+      {/* Main Content */}
       {loading ? (
         <div className="row g-3">
-          {[...Array(4)].map((_, idx) => (
+          {[...Array(LIMIT)].map((_, idx) => (
             <div key={idx} className="col-md-6 col-lg-3">
               <div className="card-solid p-4">
-                <div className="skeleton-shimmer skeleton-box w-75 mb-3" style={{ height: '1.5rem' }}></div>
+                <div className="skeleton-shimmer skeleton-box w-75 mb-3" style={{ height: '1.25rem' }}></div>
                 <div className="skeleton-shimmer skeleton-box w-50 mb-3"></div>
                 <div className="skeleton-shimmer skeleton-box w-100 mb-3"></div>
                 <div className="skeleton-shimmer skeleton-box w-25"></div>
@@ -189,7 +191,7 @@ export const FuelList = ({ onAddNew, onEdit }) => {
       ) : logs.length === 0 ? (
         <div className="text-center py-5 card-solid">
           <div className="d-inline-flex bg-light p-3 rounded-circle text-muted mb-3 fs-1">⛽</div>
-          <h3 className="mb-2">No refueling logs documented</h3>
+          <h3 className="mb-2">No refueling logs found</h3>
           <p className="text-muted mb-4" style={{ maxWidth: '400px', margin: '0 auto' }}>
             No purchase records match your search criteria. Try modifying your filters or insert a new fuel log.
           </p>
@@ -199,15 +201,17 @@ export const FuelList = ({ onAddNew, onEdit }) => {
         </div>
       ) : viewMode === 'grid' ? (
         <div className="row g-3">
-          {logs.map((log) => (
-            <div key={log._id} className="col-12 col-md-6 col-lg-3">
-              <FuelCard
-                fuelLog={log}
-                onEdit={onEdit}
-                onDelete={handleDeleteTrigger}
-              />
-            </div>
-          ))}
+          <AnimatePresence>
+            {logs.map((log) => (
+              <div key={log._id} className="col-12 col-md-6 col-lg-3">
+                <FuelCard
+                  fuelLog={log}
+                  onEdit={onEdit}
+                  onDelete={handleDeleteTrigger}
+                />
+              </div>
+            ))}
+          </AnimatePresence>
         </div>
       ) : (
         <FuelTable
@@ -217,7 +221,7 @@ export const FuelList = ({ onAddNew, onEdit }) => {
         />
       )}
 
-      {/* Pagination Row */}
+      {/* Pagination */}
       {totalPages > 1 && (
         <div className="d-flex justify-content-center mt-5">
           <div className="pagination-custom">
@@ -248,7 +252,7 @@ export const FuelList = ({ onAddNew, onEdit }) => {
         </div>
       )}
 
-      {/* Delete Confirmation Modal Overlay */}
+      {/* Delete Confirmation Modal */}
       <AnimatePresence>
         {deleteTargetId && (
           <div className="modal-overlay-custom">
@@ -260,20 +264,19 @@ export const FuelList = ({ onAddNew, onEdit }) => {
             >
               <div className="modal-header-custom bg-danger text-white">
                 <h5 className="modal-title m-0 d-flex align-items-center gap-2">
-                  <FaTrash /> Remove Purchase Log?
+                  <FaTrash /> Remove Fuel Log?
                 </h5>
                 <button
                   type="button"
-                  className="btn-close btn-close-white"
                   onClick={() => setDeleteTargetId(null)}
-                  style={{ background: 'none', border: 'none', color: '#fff', fontSize: '1.25rem' }}
+                  style={{ background: 'none', border: 'none', color: '#fff', fontSize: '1.25rem', cursor: 'pointer' }}
                 >
                   <FaTimes />
                 </button>
               </div>
               <div className="modal-body-custom">
                 <p className="mb-0">
-                  Are you absolutely certain you want to discard this refueling purchase record? This action is permanent and cannot be undone.
+                  Are you certain you want to permanently discard this fuel purchase record? This action cannot be undone.
                 </p>
               </div>
               <div className="modal-footer-custom">

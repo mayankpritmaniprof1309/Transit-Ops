@@ -10,9 +10,10 @@ import { FaEdit, FaTrashAlt } from 'react-icons/fa';
  * @param {Function} props.onDelete - Action triggered when deleting.
  */
 export const FuelTable = ({ fuelLogs, onEdit, onDelete }) => {
-  // Calculate price per unit
   const getPricePerUnit = (cost, qty) => {
-    return qty > 0 ? (cost / qty).toFixed(2) : '0.00';
+    const safeCost = Number(cost) || 0;
+    const safeQty = Number(qty) || 0;
+    return safeQty > 0 ? (safeCost / safeQty).toFixed(2) : '0.00';
   };
 
   if (!fuelLogs || fuelLogs.length === 0) {
@@ -32,8 +33,8 @@ export const FuelTable = ({ fuelLogs, onEdit, onDelete }) => {
             <th>Date</th>
             <th>Quantity</th>
             <th>Total Cost</th>
-            <th>Price per Unit</th>
-            <th>Odometer Reading</th>
+            <th>Price/L</th>
+            <th>Odometer</th>
             <th>Fuel Station</th>
             <th>Trip</th>
             <th className="text-end">Actions</th>
@@ -44,6 +45,9 @@ export const FuelTable = ({ fuelLogs, onEdit, onDelete }) => {
             const vehicleName = log.vehicle?.vehicleName || log.vehicle?.registrationNumber || 'Unknown Vehicle';
             const regNumber = log.vehicle?.registrationNumber || 'N/A';
             const tripNumber = log.trip?.tripNumber || log.trip?.tripCode || 'N/A';
+            const safeCost = Number(log.fuelCost) || 0;
+            const safeOdometer = Number(log.odometerReading) || 0;
+            const safeQty = Number(log.fuelQuantity) || 0;
 
             return (
               <motion.tr
@@ -58,13 +62,13 @@ export const FuelTable = ({ fuelLogs, onEdit, onDelete }) => {
                     <span className="text-small text-muted font-monospace">{regNumber}</span>
                   </div>
                 </td>
-                <td>{new Date(log.fuelDate).toLocaleDateString()}</td>
-                <td className="fw-semibold">{log.fuelQuantity} L</td>
-                <td className="fw-semibold">${log.fuelCost.toLocaleString()}</td>
+                <td>{log.fuelDate ? new Date(log.fuelDate).toLocaleDateString() : 'N/A'}</td>
+                <td className="fw-semibold">{safeQty} L</td>
+                <td className="fw-semibold">${safeCost.toLocaleString()}</td>
                 <td>
-                  <span className="text-muted">${getPricePerUnit(log.fuelCost, log.fuelQuantity)}/L</span>
+                  <span className="text-muted">${getPricePerUnit(safeCost, safeQty)}/L</span>
                 </td>
-                <td>{log.odometerReading.toLocaleString()} km</td>
+                <td>{safeOdometer.toLocaleString()} km</td>
                 <td>
                   <span className="text-secondary">{log.fuelStation || 'N/A'}</span>
                 </td>
