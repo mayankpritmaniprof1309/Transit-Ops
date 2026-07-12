@@ -17,6 +17,7 @@ const TripPage = () => {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [newTrip, setNewTrip] = useState({ route: '', driver: '', vehicle: '', status: 'Scheduled', date: '' });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [editingTripId, setEditingTripId] = useState(null);
 
   // Searchable Drivers Dropdown State
   const [drivers, setDrivers] = useState([]);
@@ -117,21 +118,39 @@ const TripPage = () => {
     document.body.removeChild(link);
   };
 
-  // 2. Add Functionality
+  // 2. Add/Edit Functionality
   const handleAddSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
     try {
-      const response = await TripService.createTrip(newTrip);
-      setTrips([...trips, response.data]);
+      if (editingTripId) {
+        const response = await TripService.updateTrip(editingTripId, newTrip);
+        setTrips(trips.map(t => t.id === editingTripId ? response.data : t));
+      } else {
+        const response = await TripService.createTrip(newTrip);
+        setTrips([...trips, response.data]);
+      }
       setIsAddModalOpen(false);
+      setEditingTripId(null);
       setNewTrip({ route: '', driver: '', vehicle: '', status: 'Scheduled', date: '' });
     } catch (error) {
-      console.error("Error creating trip", error);
-      alert("Failed to add trip");
+      console.error("Error saving trip", error);
+      alert("Failed to save trip");
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const handleEditClick = (trip) => {
+    setNewTrip({
+      route: trip.route,
+      driver: trip.driver,
+      vehicle: trip.vehicle,
+      status: trip.status,
+      date: trip.date,
+    });
+    setEditingTripId(trip.id);
+    setIsAddModalOpen(true);
   };
 
   const filteredTrips = trips.filter(trip => 
@@ -162,7 +181,11 @@ const TripPage = () => {
           <button className="btn-custom btn-secondary-custom shadow-sm" onClick={handleExport}>
             <FiDownload /> Export
           </button>
-          <button className="btn-custom btn-primary-gradient shadow-sm" onClick={() => setIsAddModalOpen(true)}>
+          <button className="btn-custom btn-primary-gradient shadow-sm" onClick={() => {
+            setEditingTripId(null);
+            setNewTrip({ route: '', driver: '', vehicle: '', status: 'Scheduled', date: '' });
+            setIsAddModalOpen(true);
+          }}>
             <FaPlus /> Add Trip
           </button>
         </div>
@@ -204,7 +227,7 @@ const TripPage = () => {
           </div>
         </div>
       ) : (
-        <TripTable trips={filteredTrips} onDelete={handleDelete} />
+        <TripTable trips={filteredTrips} onEdit={handleEditClick} onDelete={handleDelete} />
       )}
 
       {/* Add Modal */}
@@ -217,7 +240,11 @@ const TripPage = () => {
               exit={{ opacity: 0 }}
               className="modal-backdrop bg-dark"
               style={{ display: 'block', zIndex: 1040 }}
-              onClick={() => setIsAddModalOpen(false)}
+              onClick={() => {
+                setIsAddModalOpen(false);
+                setEditingTripId(null);
+                setNewTrip({ route: '', driver: '', vehicle: '', status: 'Scheduled', date: '' });
+              }}
             />
             <motion.div 
               initial={{ opacity: 0, y: -50 }}
@@ -230,8 +257,12 @@ const TripPage = () => {
               <div className="modal-dialog modal-dialog-centered">
                 <div className="modal-content premium-card border-0 p-0">
                   <div className="modal-header border-bottom-0 pb-0">
-                    <h5 className="modal-title fw-bold">Add New Trip</h5>
-                    <button type="button" className="btn-close" onClick={() => setIsAddModalOpen(false)}></button>
+                    <h5 className="modal-title fw-bold">{editingTripId ? 'Edit Trip' : 'Add New Trip'}</h5>
+                    <button type="button" className="btn-close" onClick={() => {
+                      setIsAddModalOpen(false);
+                      setEditingTripId(null);
+                      setNewTrip({ route: '', driver: '', vehicle: '', status: 'Scheduled', date: '' });
+                    }}></button>
                   </div>
                   <div className="modal-body">
                     <form onSubmit={handleAddSubmit}>
@@ -393,9 +424,13 @@ const TripPage = () => {
                         </select>
                       </div>
                       <div className="d-flex justify-content-end gap-2">
-                        <button type="button" className="btn-custom btn-secondary-custom shadow-sm" onClick={() => setIsAddModalOpen(false)}>Cancel</button>
+                        <button type="button" className="btn-custom btn-secondary-custom shadow-sm" onClick={() => {
+                          setIsAddModalOpen(false);
+                          setEditingTripId(null);
+                          setNewTrip({ route: '', driver: '', vehicle: '', status: 'Scheduled', date: '' });
+                        }}>Cancel</button>
                         <button type="submit" className="btn-custom btn-primary-gradient shadow-sm" disabled={isSubmitting}>
-                          {isSubmitting ? 'Adding...' : 'Add Trip'}
+                          {isSubmitting ? 'Saving...' : editingTripId ? 'Save Changes' : 'Add Trip'}
                         </button>
                       </div>
                     </form>

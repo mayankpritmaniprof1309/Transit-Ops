@@ -1,7 +1,7 @@
 import React from 'react';
 import { FiEdit, FiTrash2 } from 'react-icons/fi';
 
-const TripTable = ({ trips, onDelete }) => {
+const TripTable = ({ trips, onEdit, onDelete }) => {
   if (!trips || trips.length === 0) {
     return (
       <div className="empty-state">
@@ -48,7 +48,7 @@ const TripTable = ({ trips, onDelete }) => {
               </td>
               <td>
                 <div className="d-flex gap-2">
-                  <button className="btn btn-sm btn-secondary-soft p-2">
+                  <button className="btn btn-sm btn-secondary-soft p-2" onClick={() => onEdit(trip)}>
                     <FiEdit />
                   </button>
                   <button className="btn btn-sm btn-danger-soft p-2" onClick={() => onDelete(trip.id)}>
