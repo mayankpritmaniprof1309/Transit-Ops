@@ -4,6 +4,7 @@ import { FaPlus } from 'react-icons/fa';
 import TripTable from '../../components/trip/TripTable';
 import TripService from '../../services/trip.service';
 import { getAllDrivers } from '../../services/driver.service.js';
+import { getAllVehicles } from '../../services/vehicle.service.js';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const TripPage = () => {
@@ -22,6 +23,12 @@ const TripPage = () => {
   const [isDriverDropdownOpen, setIsDriverDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
 
+  // Searchable Vehicles Dropdown State
+  const [vehicles, setVehicles] = useState([]);
+  const [vehicleSearch, setVehicleSearch] = useState('');
+  const [isVehicleDropdownOpen, setIsVehicleDropdownOpen] = useState(false);
+  const vehicleDropdownRef = useRef(null);
+
   useEffect(() => {
     loadTrips();
   }, []);
@@ -29,6 +36,7 @@ const TripPage = () => {
   useEffect(() => {
     if (isAddModalOpen) {
       loadDrivers();
+      loadVehicles();
     }
   }, [isAddModalOpen]);
 
@@ -36,6 +44,9 @@ const TripPage = () => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
         setIsDriverDropdownOpen(false);
+      }
+      if (vehicleDropdownRef.current && !vehicleDropdownRef.current.contains(event.target)) {
+        setIsVehicleDropdownOpen(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -50,6 +61,17 @@ const TripPage = () => {
       }
     } catch (error) {
       console.error("Error loading drivers", error);
+    }
+  };
+
+  const loadVehicles = async () => {
+    try {
+      const res = await getAllVehicles({ limit: 100 });
+      if (res.success) {
+        setVehicles(res.data.vehicles || res.data || []);
+      }
+    } catch (error) {
+      console.error("Error loading vehicles", error);
     }
   };
 
@@ -119,6 +141,10 @@ const TripPage = () => {
 
   const filteredDrivers = drivers.filter(d => 
     (d.fullName || d.name || '').toLowerCase().includes(driverSearch.toLowerCase())
+  );
+
+  const filteredVehicles = vehicles.filter(v => 
+    (v.registrationNumber || v.vehicleName || '').toLowerCase().includes(vehicleSearch.toLowerCase())
   );
 
   return (
@@ -272,9 +298,76 @@ const TripPage = () => {
                         )}
                       </div>
                       <div className="row">
-                        <div className="col-md-6 mb-3">
+                        <div className="col-md-6 mb-3 position-relative" ref={vehicleDropdownRef}>
                           <label className="form-label text-secondary fw-semibold small">Vehicle</label>
-                          <input type="text" className="form-control" required value={newTrip.vehicle} onChange={e => setNewTrip({...newTrip, vehicle: e.target.value})} placeholder="Vehicle ID" />
+                          <div 
+                            className="form-control d-flex justify-content-between align-items-center cursor-pointer bg-white"
+                            style={{ minHeight: '38px', borderRadius: '8px', cursor: 'pointer' }}
+                            onClick={() => setIsVehicleDropdownOpen(!isVehicleDropdownOpen)}
+                          >
+                            <span className={newTrip.vehicle ? 'text-dark' : 'text-muted'}>
+                              {newTrip.vehicle || 'Select Vehicle'}
+                            </span>
+                            <span style={{ fontSize: '10px', color: '#64748b' }}>▼</span>
+                          </div>
+
+                          {/* Hidden input to support HTML5 validation */}
+                          <input
+                            type="text"
+                            required
+                            value={newTrip.vehicle}
+                            onChange={() => {}}
+                            tabIndex={-1}
+                            style={{ position: 'absolute', opacity: 0, height: 0, width: 0, pointerEvents: 'none' }}
+                          />
+
+                          {isVehicleDropdownOpen && (
+                            <div 
+                              className="position-absolute w-100 bg-white border shadow-lg mt-1 p-2" 
+                              style={{ zIndex: 1060, borderRadius: '8px', maxHeight: '250px', overflowY: 'auto' }}
+                            >
+                              <div className="input-group mb-2">
+                                <span className="input-group-text bg-light border-end-0 py-1 px-2">
+                                  <FiSearch size={14} className="text-muted" />
+                                </span>
+                                <input
+                                  type="text"
+                                  className="form-control form-control-sm border-start-0"
+                                  placeholder="Search vehicle..."
+                                  value={vehicleSearch}
+                                  onChange={(e) => setVehicleSearch(e.target.value)}
+                                  style={{ fontSize: '13px' }}
+                                  autoFocus
+                                />
+                              </div>
+                              <div className="list-group list-group-flush" style={{ maxHeight: '160px', overflowY: 'auto' }}>
+                                {filteredVehicles.length > 0 ? (
+                                  filteredVehicles.map((v) => (
+                                    <button
+                                      key={v._id || v.id}
+                                      type="button"
+                                      className="list-group-item list-group-item-action border-0 px-2 py-1.5 rounded text-start"
+                                      onClick={() => {
+                                        setNewTrip({ ...newTrip, vehicle: v.registrationNumber || v.vehicleName });
+                                        setIsVehicleDropdownOpen(false);
+                                        setVehicleSearch('');
+                                      }}
+                                      style={{ fontSize: '13px' }}
+                                    >
+                                      <div className="fw-semibold">{v.registrationNumber}</div>
+                                      <div className="text-muted" style={{ fontSize: '11px' }}>
+                                        {v.vehicleName} {v.vehicleModel ? `(${v.vehicleModel})` : ''}
+                                      </div>
+                                    </button>
+                                  ))
+                                ) : (
+                                  <div className="text-center py-2 text-muted" style={{ fontSize: '12px' }}>
+                                    No vehicles found
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          )}
                         </div>
                         <div className="col-md-6 mb-3">
                           <label className="form-label text-secondary fw-semibold small">Date</label>
