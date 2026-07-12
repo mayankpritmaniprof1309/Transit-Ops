@@ -1,23 +1,15 @@
-export const validateCreateDriver = (data) => {
-  const errors = [];
-  if (!data.fullName) errors.push('Full name is required');
-  if (!data.licenseNumber) errors.push('License number is required');
-  if (!data.licenseCategory) errors.push('License category is required');
-  if (!data.licenseExpiryDate) errors.push('License expiry date is required');
-  if (!data.contactNumber) errors.push('Contact number is required');
-  
-  if (data.email && !/^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/.test(data.email)) {
-    errors.push('Invalid email address format');
-  }
+import Joi from 'joi';
 
-  if (data.safetyScore !== undefined && (data.safetyScore < 0 || data.safetyScore > 100)) {
-    errors.push('Safety score must be between 0 and 100');
-  }
-
-  const validStatuses = ['Available', 'On Trip', 'Off Duty', 'Suspended'];
-  if (data.status && !validStatuses.includes(data.status)) {
-    errors.push('Invalid driver status');
-  }
-
-  return errors;
-};
+export const createDriverSchema = Joi.object({
+  fullName: Joi.string().trim().required().messages({'any.required': 'Full name is required'}),
+  licenseNumber: Joi.string().trim().uppercase().required().messages({'any.required': 'License number is required'}),
+  licenseCategory: Joi.string().trim().required().messages({'any.required': 'License category is required'}),
+  licenseExpiryDate: Joi.date().required().messages({'any.required': 'License expiry date is required'}),
+  contactNumber: Joi.string().trim().required().messages({'any.required': 'Contact number is required'}),
+  email: Joi.string().email().trim().allow(null, '').optional(),
+  safetyScore: Joi.number().min(0).max(100).default(100),
+  status: Joi.string().valid('Available', 'On Trip', 'Off Duty', 'Suspended').default('Available'),
+  address: Joi.string().trim().allow(null, '').optional(),
+  emergencyContact: Joi.string().trim().allow(null, '').optional(),
+  createdBy: Joi.string().allow(null, '').optional()
+});
