@@ -34,7 +34,7 @@ export const FuelCard = ({ fuelLog, onEdit, onDelete }) => {
 
   return (
     <motion.div
-      className="card-solid hover-lift h-100 d-flex flex-column justify-content-between"
+      className="premium-card h-100 d-flex flex-column justify-content-between"
       initial={{ opacity: 0, y: 15 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -10 }}
@@ -107,13 +107,13 @@ export const FuelCard = ({ fuelLog, onEdit, onDelete }) => {
       <div className="d-flex gap-2 mt-auto pt-3 border-top">
         <button
           onClick={() => onEdit && onEdit(fuelLog)}
-          className="btn-custom btn-secondary-custom flex-grow-1 py-2 justify-content-center"
+          className="btn-premium-secondary flex-grow-1 py-2 justify-content-center"
         >
           <FaEdit className="me-1" /> Edit
         </button>
         <button
           onClick={() => onDelete && onDelete(_id)}
-          className="btn-custom btn-danger-custom py-2 justify-content-center"
+          className="btn-premium-danger py-2 justify-content-center"
           style={{ width: '45px', padding: '0' }}
           title="Delete Log"
         >
