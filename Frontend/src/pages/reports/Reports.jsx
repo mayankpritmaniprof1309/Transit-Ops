@@ -202,7 +202,7 @@ export const Reports = () => {
     : [];
   const costChartData = costRows.slice(0, 10).map((r) => ({
     label: r.vehicle?.registrationNumber || r.vehicle?.vehicleName || r.vehicleName || '—',
-    value: Number(r.totalCost ?? r.cost ?? 0),
+    value: Number(r.totalOperationalCost ?? r.totalCost ?? r.cost ?? 0),
   }));
 
   // ROI table rows — array of { vehicle, revenue, totalCost, roi }
@@ -222,10 +222,10 @@ export const Reports = () => {
   // Operational cost table
   const costTableRows = costRows.slice(0, 8).map((r) => ({
     vehicle: r.vehicle?.registrationNumber || r.vehicle?.vehicleName || r.vehicleName || '—',
-    total: `$${Number(r.totalCost ?? r.cost ?? 0).toLocaleString()}`,
+    total: `$${Number(r.totalOperationalCost ?? r.totalCost ?? r.cost ?? 0).toLocaleString()}`,
     fuel: r.fuelCost != null ? `$${Number(r.fuelCost).toLocaleString()}` : '—',
     maintenance: r.maintenanceCost != null ? `$${Number(r.maintenanceCost).toLocaleString()}` : '—',
-    expenses: r.expenseCost != null ? `$${Number(r.expenseCost).toLocaleString()}` : '—',
+    expenses: r.otherExpenses != null ? `$${Number(r.otherExpenses ?? r.expenseCost).toLocaleString()}` : '—',
   }));
 
   // ROI table
