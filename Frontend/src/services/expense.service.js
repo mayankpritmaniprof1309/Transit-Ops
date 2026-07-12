@@ -50,3 +50,12 @@ export const deleteExpense = async (id) => {
   const response = await api.delete(`/expenses/${id}`);
   return response.data;
 };
+
+/**
+ * Fetch aggregated expense statistics.
+ * @returns {Promise<Object>} API response data.
+ */
+export const getExpenseStats = async () => {
+  const response = await api.get('/expenses/statistics');
+  return response.data;
+};

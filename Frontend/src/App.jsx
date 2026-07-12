@@ -10,7 +10,7 @@ import VehiclesPage from './pages/vehicle/VehiclesPage';
 import DriversPage from './pages/driver/DriversPage';
 import FuelPage from './pages/fuel/FuelPage';
 import Login from './pages/auth/Login';
-import ExpensePage from './pages/expense/ExpensePage';
+import ExpenseManagement from './pages/expense/ExpenseManagement.jsx';
 import Register from './pages/auth/Register.jsx';
 import Reports from './pages/reports/Reports.jsx';
 import ForgotPassword from './pages/auth/ForgotPassword.jsx';
@@ -101,7 +101,7 @@ function App() {
             element={
               <ProtectedRoute>
                 <DashboardLayout>
-                  <ExpensePage />
+                  <ExpenseManagement />
                 </DashboardLayout>
               </ProtectedRoute>
             }
