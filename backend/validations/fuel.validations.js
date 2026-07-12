@@ -11,3 +11,14 @@ export const createFuelLogSchema = Joi.object({
   remarks: Joi.string().trim().allow(null, '').optional(),
   createdBy: Joi.string().allow(null, '').optional()
 });
+
+export const updateFuelLogSchema = Joi.object({
+  vehicle: Joi.string().optional(),
+  trip: Joi.string().allow(null, '').optional(),
+  fuelQuantity: Joi.number().min(0).optional().messages({'number.min': 'Fuel quantity cannot be negative'}),
+  fuelCost: Joi.number().min(0).optional().messages({'number.min': 'Fuel cost cannot be negative'}),
+  fuelStation: Joi.string().trim().allow(null, '').optional(),
+  fuelDate: Joi.date().optional(),
+  odometerReading: Joi.number().min(0).optional().messages({'number.min': 'Odometer reading cannot be negative'}),
+  remarks: Joi.string().trim().allow(null, '').optional(),
+});

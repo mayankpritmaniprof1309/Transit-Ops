@@ -80,7 +80,69 @@ export const createMaintenanceSchema = Joi.object({
     }),
 });
 
-export const updateMaintenanceSchema = createMaintenanceSchema;
+export const updateMaintenanceSchema = Joi.object({
+  vehicle: Joi.string()
+    .custom(objectId)
+    .optional(),
+
+  maintenanceType: Joi.string()
+    .trim()
+    .min(3)
+    .max(100)
+    .optional()
+    .messages({
+      'string.min': 'Maintenance type must be at least 3 characters',
+      'string.max': 'Maintenance type cannot exceed 100 characters',
+    }),
+
+  description: Joi.string()
+    .trim()
+    .max(500)
+    .allow(null, '')
+    .optional()
+    .messages({
+      'string.max': 'Description cannot exceed 500 characters',
+    }),
+
+  maintenanceDate: Joi.date()
+    .optional(),
+
+  completionDate: Joi.date()
+    .allow(null, '')
+    .optional(),
+
+  cost: Joi.number()
+    .min(0)
+    .optional()
+    .messages({
+      'number.min': 'Cost must be greater than or equal to 0',
+    }),
+
+  maintenanceStatus: Joi.string()
+    .valid('Pending', 'In Progress', 'Completed')
+    .optional()
+    .messages({
+      'any.only': 'Status must be one of: Pending, In Progress, Completed',
+    }),
+
+  technicianName: Joi.string()
+    .trim()
+    .min(2)
+    .allow(null, '')
+    .optional()
+    .messages({
+      'string.min': 'Technician name must be at least 2 characters',
+    }),
+
+  remarks: Joi.string()
+    .trim()
+    .max(500)
+    .allow(null, '')
+    .optional()
+    .messages({
+      'string.max': 'Remarks cannot exceed 500 characters',
+    }),
+});
 
 export const completeMaintenanceSchema = Joi.object({
   completionDate: Joi.date()

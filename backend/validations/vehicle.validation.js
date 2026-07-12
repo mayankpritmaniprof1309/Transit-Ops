@@ -74,4 +74,68 @@ export const createVehicleSchema = Joi.object({
     .optional(),
 });
 
-export const updateVehicleSchema = createVehicleSchema;
+export const updateVehicleSchema = Joi.object({
+  registrationNumber: Joi.string()
+    .trim()
+    .uppercase()
+    .min(5)
+    .max(20)
+    .optional()
+    .messages({
+      'string.min': 'Registration number must be at least 5 characters',
+      'string.max': 'Registration number cannot exceed 20 characters',
+    }),
+
+  vehicleName: Joi.string()
+    .trim()
+    .min(2)
+    .optional()
+    .messages({
+      'string.min': 'Vehicle name must be at least 2 characters',
+    }),
+
+  vehicleModel: Joi.string()
+    .trim()
+    .optional(),
+
+  vehicleType: Joi.string()
+    .trim()
+    .valid('Truck', 'Van', 'Mini Truck', 'Pickup', 'Trailer', 'Other')
+    .optional()
+    .messages({
+      'any.only': 'Vehicle type must be one of: Truck, Van, Mini Truck, Pickup, Trailer, Other',
+    }),
+
+  maximumLoadCapacity: Joi.number()
+    .greater(0)
+    .optional()
+    .messages({
+      'number.greater': 'Maximum load capacity must be greater than 0',
+    }),
+
+  odometer: Joi.number()
+    .min(0)
+    .optional()
+    .messages({
+      'number.min': 'Odometer reading cannot be negative',
+    }),
+
+  acquisitionCost: Joi.number()
+    .greater(0)
+    .optional()
+    .messages({
+      'number.greater': 'Acquisition cost must be positive',
+    }),
+
+  status: Joi.string()
+    .valid('Available', 'On Trip', 'In Shop', 'Retired')
+    .optional()
+    .messages({
+      'any.only': 'Status must be one of: Available, On Trip, In Shop, Retired',
+    }),
+
+  region: Joi.string()
+    .trim()
+    .allow(null, '')
+    .optional(),
+});

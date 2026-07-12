@@ -8,6 +8,7 @@ import {
   deleteUser,
 } from '../controllers/auth.controller.js';
 import { protect } from '../middleware/auth.js';
+import { restrictTo } from '../middleware/role.js';
 
 const router = express.Router();
 
@@ -18,7 +19,9 @@ router.post('/login', loginUser);
 // Protected routes
 router.get('/', protect, getAllUsers);
 router.get('/:id', protect, getUserById);
-router.put('/:id', protect, updateUser);
-router.delete('/:id', protect, deleteUser);
+
+// Mutation routes - Fleet Manager only
+router.put('/:id', protect, restrictTo('Fleet Manager'), updateUser);
+router.delete('/:id', protect, restrictTo('Fleet Manager'), deleteUser);
 
 export default router;
