@@ -1,6 +1,8 @@
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
+import crypto from 'crypto';
 import User from '../models/User.js';
+import { sendMail } from '../utils/mailSender.js';
 
 // Helper to sign JWT token
 const signToken = (id) => {
@@ -150,4 +152,94 @@ export const loginUser = async (email, password) => {
   delete userObj.password;
 
   return { user: userObj, token };
+};
+
+/**
+ * Handle password reset token generation and emailing
+ * @param {string} email
+ * @returns {Promise<boolean>}
+ */
+export const forgotPassword = async (email) => {
+  if (!email) {
+    const err = new Error('Please provide email address');
+    err.statusCode = 400;
+    throw err;
+  }
+
+  const user = await User.findOne({ email });
+  if (!user) {
+    // For security, do not reveal if email exists, just return true
+    return true;
+  }
+
+  // Generate a random token
+  const resetToken = crypto.randomBytes(20).toString('hex');
+  
+  user.passwordResetToken = resetToken;
+  user.passwordResetExpires = Date.now() + 3600000; // 1 hour expiry
+  await user.save({ validateBeforeSave: false });
+
+  // Send email
+  const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+  const resetUrl = `${frontendUrl}/reset-password/${resetToken}`;
+
+  const message = `You are receiving this email because you (or someone else) have requested the reset of a password.
+Please click on the following link, or paste this into your browser to complete the process within 1 hour:
+
+${resetUrl}
+
+If you did not request this, please ignore this email and your password will remain unchanged.`;
+
+  const html = `<p>You are receiving this email because you (or someone else) have requested the reset of a password.</p>
+<p>Please click on the link below to complete the process within 1 hour:</p>
+<p><a href="${resetUrl}" style="padding: 10px 20px; background-color: #2563EB; color: white; text-decoration: none; border-radius: 5px; display: inline-block;">Reset Password</a></p>
+<p>Or copy and paste this URL into your browser:</p>
+<pre>${resetUrl}</pre>
+<p>If you did not request this, please ignore this email and your password will remain unchanged.</p>`;
+
+  await sendMail({
+    to: user.email,
+    subject: 'TransitOps Password Reset Request',
+    text: message,
+    html,
+  });
+
+  return true;
+};
+
+/**
+ * Reset password using token
+ * @param {string} token
+ * @param {string} newPassword
+ * @returns {Promise<boolean>}
+ */
+export const resetPassword = async (token, newPassword) => {
+  if (!token || !newPassword) {
+    const err = new Error('Please provide reset token and new password');
+    err.statusCode = 400;
+    throw err;
+  }
+
+  const user = await User.findOne({
+    passwordResetToken: token,
+    passwordResetExpires: { $gt: Date.now() },
+  });
+
+  if (!user) {
+    const err = new Error('Password reset token is invalid or has expired');
+    err.statusCode = 400;
+    throw err;
+  }
+
+  // Hash new password
+  const salt = await bcrypt.genSalt(10);
+  user.password = await bcrypt.hash(newPassword, salt);
+  
+  // Clear reset token fields
+  user.passwordResetToken = undefined;
+  user.passwordResetExpires = undefined;
+  
+  await user.save({ validateBeforeSave: false });
+
+  return true;
 };

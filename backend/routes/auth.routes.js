@@ -6,6 +6,8 @@ import {
   getUserById,
   updateUser,
   deleteUser,
+  forgotPassword,
+  resetPassword,
 } from '../controllers/auth.controller.js';
 import { protect } from '../middleware/auth.js';
 import { restrictTo } from '../middleware/role.js';
@@ -15,6 +17,8 @@ const router = express.Router();
 // Public routes
 router.post('/register', createUser);
 router.post('/login', loginUser);
+router.post('/forgot-password', forgotPassword);
+router.post('/reset-password/:token', resetPassword);
 
 // Protected routes
 router.get('/', protect, getAllUsers);

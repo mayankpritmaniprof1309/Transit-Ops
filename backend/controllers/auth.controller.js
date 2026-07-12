@@ -128,3 +128,38 @@ export const deleteUser = async (req, res, next) => {
     next(err);
   }
 };
+
+/**
+ * Request password reset
+ */
+export const forgotPassword = async (req, res, next) => {
+  try {
+    const { email } = req.body;
+    await authService.forgotPassword(email);
+
+    res.status(200).json({
+      success: true,
+      message: 'If an account exists with that email, a password reset link has been sent.',
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+/**
+ * Reset password using token
+ */
+export const resetPassword = async (req, res, next) => {
+  try {
+    const { token } = req.params;
+    const { password } = req.body;
+    await authService.resetPassword(token, password);
+
+    res.status(200).json({
+      success: true,
+      message: 'Password reset successfully',
+    });
+  } catch (err) {
+    next(err);
+  }
+};
