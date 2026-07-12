@@ -197,12 +197,22 @@ If you did not request this, please ignore this email and your password will rem
 <pre>${resetUrl}</pre>
 <p>If you did not request this, please ignore this email and your password will remain unchanged.</p>`;
 
-  await sendMail({
-    to: user.email,
-    subject: 'TransitOps Password Reset Request',
-    text: message,
-    html,
-  });
+  try {
+    await sendMail({
+      to: user.email,
+      subject: 'TransitOps Password Reset Request',
+      text: message,
+      html,
+    });
+  } catch (mailError) {
+    console.warn('\n==================================================');
+    console.warn('⚠️  MAIL DELIVERY FAILED:');
+    console.warn(`Could not send password reset email to: ${user.email}`);
+    console.warn(`Reason: ${mailError.message}`);
+    console.warn('🔑 LOCAL PASSWORD RESET LINK (COPY THIS):');
+    console.warn(resetUrl);
+    console.warn('==================================================\n');
+  }
 
   return true;
 };
