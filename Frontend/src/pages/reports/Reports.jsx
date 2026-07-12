@@ -126,7 +126,12 @@ export const Reports = () => {
   // Load vehicle list for filter dropdown
   useEffect(() => {
     getAllVehicles()
-      .then((res) => { if (res.success) setVehicles(res.data || []); })
+      .then((res) => { 
+        if (res.success) {
+          const vehList = Array.isArray(res.data) ? res.data : (res.data?.vehicles || []);
+          setVehicles(vehList);
+        } 
+      })
       .catch(() => {});
   }, []);
 

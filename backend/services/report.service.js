@@ -80,33 +80,59 @@ export const getDashboardReport = async (startDate, endDate) => {
  * Calculates Fuel Efficiency (Distance / Fuel Consumed) for completed trips.
  */
 export const getFuelEfficiencyReport = async (startDate, endDate, vehicleId) => {
-  const filter = { tripStatus: 'Completed' };
+  const match = { tripStatus: 'Completed' };
   if (vehicleId) {
-    filter.vehicle = new mongoose.Types.ObjectId(vehicleId);
+    match.vehicle = new mongoose.Types.ObjectId(vehicleId);
   }
   if (startDate || endDate) {
-    filter.completionDate = {};
-    if (startDate) filter.completionDate.$gte = new Date(startDate);
-    if (endDate) filter.completionDate.$lte = new Date(endDate);
+    match.completionDate = {};
+    if (startDate) match.completionDate.$gte = new Date(startDate);
+    if (endDate) match.completionDate.$lte = new Date(endDate);
   }
 
-  const trips = await Trip.find(filter)
-    .populate('vehicle', 'registrationNumber vehicleName vehicleModel')
-    .populate('driver', 'fullName licenseNumber');
+  const pipeline = [
+    { $match: match },
+    {
+      $group: {
+        _id: '$vehicle',
+        totalDistance: { $sum: { $ifNull: ['$actualDistance', 0] } },
+        totalFuel: { $sum: { $ifNull: ['$fuelConsumed', 0] } },
+        tripCount: { $sum: 1 }
+      }
+    },
+    {
+      $lookup: {
+        from: 'vehicles',
+        localField: '_id',
+        foreignField: '_id',
+        as: 'vehicleInfo'
+      }
+    },
+    { $unwind: '$vehicleInfo' },
+    {
+      $project: {
+        _id: 0,
+        vehicle: {
+          _id: '$vehicleInfo._id',
+          registrationNumber: '$vehicleInfo.registrationNumber',
+          vehicleName: '$vehicleInfo.vehicleName',
+          vehicleModel: '$vehicleInfo.vehicleModel'
+        },
+        totalDistance: 1,
+        totalFuel: 1,
+        tripCount: 1,
+        efficiency: {
+          $cond: [
+            { $gt: ['$totalFuel', 0] },
+            { $divide: ['$totalDistance', '$totalFuel'] },
+            0
+          ]
+        }
+      }
+    }
+  ];
 
-  return trips.map((trip) => {
-    const distance = trip.actualDistance || 0;
-    const fuel = trip.fuelConsumed || 0;
-    const efficiency = fuel > 0 ? (distance / fuel) : 0;
-    return {
-      tripNumber: trip.tripNumber,
-      vehicle: trip.vehicle,
-      driver: trip.driver,
-      distance,
-      fuelConsumed: fuel,
-      fuelEfficiency: parseFloat(efficiency.toFixed(2)),
-    };
-  });
+  return await Trip.aggregate(pipeline);
 };
 
 /**

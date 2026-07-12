@@ -40,9 +40,9 @@ export default function ExpenseForm({ expense, onSave, onSubmit, onCancel, loadi
         try {
           const resTrips = await tripService.getAllTrips();
           const tripsData = resTrips?.data || [];
-          tripList = tripsData.map(t => ({
-            _id: t._id || t.id?.toString() || '',
-            startLocation: t.startLocation || t.route || `Trip #${t.id}`,
+          tripList = tripsData.map((t, i) => ({
+            _id: t._id || t.id?.toString() || `trip-fallback-${i}`,
+            startLocation: t.startLocation || t.route || `Trip #${i + 1}`,
             endLocation: t.endLocation || '',
             tripStatus: t.tripStatus || t.status || 'Draft',
             vehicle: t.vehicle
@@ -173,8 +173,8 @@ export default function ExpenseForm({ expense, onSave, onSubmit, onCancel, loadi
               disabled={isFormDisabled || fetchingData}
             >
               <option value="">No Associated Trip (N/A)</option>
-              {filteredTrips.map((t) => (
-                <option key={t._id} value={t._id}>
+              {filteredTrips.map((t, idx) => (
+                <option key={t._id || `trip-opt-${idx}`} value={t._id}>
                   {t.startLocation}{t.endLocation ? ` → ${t.endLocation}` : ''} ({t.tripStatus || 'Draft'})
                 </option>
               ))}

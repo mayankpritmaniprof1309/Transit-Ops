@@ -15,7 +15,15 @@ const TripPage = () => {
   
   // Modal State
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [newTrip, setNewTrip] = useState({ route: '', driver: '', vehicle: '', status: 'Scheduled', date: '' });
+  const [newTrip, setNewTrip] = useState({
+    source: '', destination: '',
+    driver: '', driverId: '',
+    vehicle: '', vehicleId: '',
+    tripStatus: 'Draft',
+    dispatchDate: '',
+    cargoWeight: '',
+    plannedDistance: '',
+  });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [editingTripId, setEditingTripId] = useState(null);
 
@@ -81,14 +89,10 @@ const TripPage = () => {
     setLoading(true);
     try {
       const response = await TripService.getAllTrips();
-      if (response.success) {
-        setTrips(response.data.trips || response.data || []);
-      } else {
-        setTrips(Array.isArray(response) ? response : []);
-      }
+      // response = { success, data: [...trips] }
+      setTrips(response.data || []);
     } catch (error) {
       console.error("Error loading trips", error);
-      setTrips([]);
     } finally {
       setLoading(false);
     }
@@ -96,23 +100,32 @@ const TripPage = () => {
 
   const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this trip?")) {
-      await TripService.deleteTrip(id);
-      setTrips(trips.filter(t => t._id !== id));
+      try {
+        await TripService.deleteTrip(id);
+        setTrips(trips.filter(t => t._id !== id));
+      } catch (error) {
+        console.error("Error deleting trip", error);
+        alert(error?.response?.data?.message || "Failed to delete trip.");
+      }
     }
   };
 
   // 1. Export Functionality
   const handleExport = () => {
     if (trips.length === 0) return alert("No data to export");
-    
-    // Define headers
-    const headers = ['Trip ID', 'Route', 'Driver', 'Vehicle', 'Date', 'Status'];
-    // Map data to rows
+    const headers = ['Trip Number', 'Source', 'Destination', 'Driver', 'Vehicle', 'Date', 'Status'];
     const csvRows = [
-      headers.join(','), // Header row
-      ...filteredTrips.map(t => `${t._id || t.tripNumber},"${t.source} to ${t.destination}","${t.driver?.fullName || 'Unknown'}","${t.vehicle?.registrationNumber || 'Unknown'}",${t.dispatchDate || t.createdAt},${t.tripStatus || t.status}`)
+      headers.join(','),
+      ...filteredTrips.map(t => [
+        t.tripNumber,
+        `"${t.source}"`,
+        `"${t.destination}"`,
+        `"${t.driver?.fullName || t.driver || 'N/A'}"`,
+        `"${t.vehicle?.registrationNumber || t.vehicle || 'N/A'}"`,
+        t.dispatchDate ? new Date(t.dispatchDate).toLocaleDateString() : 'N/A',
+        t.tripStatus
+      ].join(','))
     ];
-    
     const csvContent = "data:text/csv;charset=utf-8," + csvRows.join('\n');
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
@@ -123,37 +136,46 @@ const TripPage = () => {
     document.body.removeChild(link);
   };
 
+  // 2. Add/Edit Functionality
+  const emptyTrip = {
+    source: '', destination: '',
+    driver: '', driverId: '',
+    vehicle: '', vehicleId: '',
+    tripStatus: 'Draft',
+    dispatchDate: '',
+    cargoWeight: '',
+    plannedDistance: '',
+  };
+
   const handleAddSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
     try {
+      // Build payload with ObjectIds for backend
       const payload = {
-        source: newTrip.route.split(' to ')[0] || newTrip.route,
-        destination: newTrip.route.split(' to ')[1] || 'Unknown',
-        vehicle: newTrip.vehicleId,
-        driver: newTrip.driverId,
-        tripStatus: newTrip.status,
-        dispatchDate: newTrip.date || undefined
+        source:          newTrip.source,
+        destination:     newTrip.destination,
+        driver:          newTrip.driverId,
+        vehicle:         newTrip.vehicleId,
+        tripStatus:      newTrip.tripStatus,
+        dispatchDate:    newTrip.dispatchDate || undefined,
+        cargoWeight:     parseFloat(newTrip.cargoWeight) || 0,
+        plannedDistance: parseFloat(newTrip.plannedDistance) || 0,
       };
 
       if (editingTripId) {
         const response = await TripService.updateTrip(editingTripId, payload);
-        // Refresh full trip list since populated driver/vehicle info is returned or we just reload
-        loadTrips();
+        setTrips(trips.map(t => t._id === editingTripId ? response.data : t));
       } else {
-        // Add create-only required fields
-        payload.tripNumber = `TRP-${Math.floor(Math.random() * 90000) + 10000}`;
-        payload.cargoWeight = 5000;
-        payload.plannedDistance = 100;
         const response = await TripService.createTrip(payload);
-        loadTrips();
+        setTrips([...trips, response.data]);
       }
       setIsAddModalOpen(false);
       setEditingTripId(null);
-      setNewTrip({ route: '', driver: '', driverId: null, vehicle: '', vehicleId: null, status: 'Scheduled', date: '' });
+      setNewTrip(emptyTrip);
     } catch (error) {
       console.error("Error saving trip", error);
-      alert("Failed to save trip. Check required fields or validation.");
+      alert(error?.response?.data?.message || "Failed to save trip.");
     } finally {
       setIsSubmitting(false);
     }
@@ -161,30 +183,29 @@ const TripPage = () => {
 
   const handleEditClick = (trip) => {
     setNewTrip({
-      route: trip.route || `${trip.source} to ${trip.destination}`,
-      driver: trip.driver?.fullName || trip.driver,
-      driverId: trip.driver?._id || trip.driver,
-      vehicle: trip.vehicle?.registrationNumber || trip.vehicle,
-      vehicleId: trip.vehicle?._id || trip.vehicle,
-      status: trip.tripStatus || trip.status,
-      date: trip.dispatchDate ? new Date(trip.dispatchDate).toISOString().split('T')[0] : trip.date,
+      source:          trip.source || '',
+      destination:     trip.destination || '',
+      driver:          trip.driver?.fullName || '',
+      driverId:        trip.driver?._id || trip.driver || '',
+      vehicle:         trip.vehicle?.registrationNumber || '',
+      vehicleId:       trip.vehicle?._id || trip.vehicle || '',
+      tripStatus:      trip.tripStatus || 'Draft',
+      dispatchDate:    trip.dispatchDate ? new Date(trip.dispatchDate).toISOString().split('T')[0] : '',
+      cargoWeight:     trip.cargoWeight || '',
+      plannedDistance: trip.plannedDistance || '',
     });
     setEditingTripId(trip._id);
     setIsAddModalOpen(true);
   };
 
   const filteredTrips = trips.filter(trip => {
-    const route = trip.route || `${trip.source} to ${trip.destination}` || '';
-    const driverName = trip.driver?.fullName || trip.driver || '';
-    const vehicleName = trip.vehicle?.registrationNumber || trip.vehicle || '';
-    const status = trip.tripStatus || trip.status || '';
-
-    return (
-      (route.toLowerCase().includes(searchTerm.toLowerCase()) || 
-       driverName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-       vehicleName.toLowerCase().includes(searchTerm.toLowerCase())) &&
-      (statusFilter === 'All' || status === statusFilter)
-    );
+    const route = `${trip.source || ''} ${trip.destination || ''}`.toLowerCase();
+    const driverName = (trip.driver?.fullName || trip.driver || '').toLowerCase();
+    const vehicleReg = (trip.vehicle?.registrationNumber || trip.vehicle || '').toLowerCase();
+    const term = searchTerm.toLowerCase();
+    const matchesSearch = !searchTerm || route.includes(term) || driverName.includes(term) || vehicleReg.includes(term);
+    const matchesStatus = statusFilter === 'All' || trip.tripStatus === statusFilter;
+    return matchesSearch && matchesStatus;
   });
 
   const filteredDrivers = drivers.filter(d => 
@@ -239,9 +260,10 @@ const TripPage = () => {
               onChange={(e) => setStatusFilter(e.target.value)}
             >
               <option value="All">All Statuses</option>
-              <option value="Scheduled">Scheduled</option>
-              <option value="In Progress">In Progress</option>
+              <option value="Draft">Draft</option>
+              <option value="Dispatched">Dispatched</option>
               <option value="Completed">Completed</option>
+              <option value="Cancelled">Cancelled</option>
             </select>
           </div>
         </div>
@@ -270,7 +292,7 @@ const TripPage = () => {
               onClick={() => {
                 setIsAddModalOpen(false);
                 setEditingTripId(null);
-                setNewTrip({ route: '', driver: '', vehicle: '', status: 'Scheduled', date: '' });
+                setNewTrip(emptyTrip);
               }}
             />
             <motion.div 
@@ -288,14 +310,26 @@ const TripPage = () => {
                     <button type="button" className="btn-close" onClick={() => {
                       setIsAddModalOpen(false);
                       setEditingTripId(null);
-                      setNewTrip({ route: '', driver: '', vehicle: '', status: 'Scheduled', date: '' });
+                      setNewTrip(emptyTrip);
                     }}></button>
                   </div>
                   <div className="modal-body">
                     <form onSubmit={handleAddSubmit}>
-                      <div className="mb-3">
-                        <label className="form-label text-secondary fw-semibold small">Route</label>
-                        <input type="text" className="form-control" required value={newTrip.route} onChange={e => setNewTrip({...newTrip, route: e.target.value})} placeholder="e.g. NY to Boston" />
+                      <div className="row">
+                        <div className="col-md-6 mb-3">
+                          <label className="form-label text-secondary fw-semibold small">Source</label>
+                          <input type="text" className="form-control" required
+                            value={newTrip.source}
+                            onChange={e => setNewTrip({...newTrip, source: e.target.value})}
+                            placeholder="e.g. Mumbai, MH" />
+                        </div>
+                        <div className="col-md-6 mb-3">
+                          <label className="form-label text-secondary fw-semibold small">Destination</label>
+                          <input type="text" className="form-control" required
+                            value={newTrip.destination}
+                            onChange={e => setNewTrip({...newTrip, destination: e.target.value})}
+                            placeholder="e.g. Pune, MH" />
+                        </div>
                       </div>
                       <div className="mb-3 position-relative" ref={dropdownRef}>
                         <label className="form-label text-secondary fw-semibold small">Driver</label>
@@ -438,23 +472,44 @@ const TripPage = () => {
                           )}
                         </div>
                         <div className="col-md-6 mb-3">
-                          <label className="form-label text-secondary fw-semibold small">Date</label>
-                          <input type="date" className="form-control" required value={newTrip.date} onChange={e => setNewTrip({...newTrip, date: e.target.value})} />
+                          <label className="form-label text-secondary fw-semibold small">Dispatch Date</label>
+                          <input type="date" className="form-control"
+                            value={newTrip.dispatchDate}
+                            onChange={e => setNewTrip({...newTrip, dispatchDate: e.target.value})} />
+                        </div>
+                      </div>
+                      <div className="row">
+                        <div className="col-md-6 mb-3">
+                          <label className="form-label text-secondary fw-semibold small">Cargo Weight (kg)</label>
+                          <input type="number" className="form-control" min="0"
+                            value={newTrip.cargoWeight}
+                            onChange={e => setNewTrip({...newTrip, cargoWeight: e.target.value})}
+                            placeholder="e.g. 1200" />
+                        </div>
+                        <div className="col-md-6 mb-3">
+                          <label className="form-label text-secondary fw-semibold small">Planned Distance (km)</label>
+                          <input type="number" className="form-control" min="0"
+                            value={newTrip.plannedDistance}
+                            onChange={e => setNewTrip({...newTrip, plannedDistance: e.target.value})}
+                            placeholder="e.g. 350" />
                         </div>
                       </div>
                       <div className="mb-4">
                         <label className="form-label text-secondary fw-semibold small">Status</label>
-                        <select className="form-select" value={newTrip.status} onChange={e => setNewTrip({...newTrip, status: e.target.value})}>
-                          <option>Scheduled</option>
-                          <option>In Progress</option>
-                          <option>Completed</option>
+                        <select className="form-select"
+                          value={newTrip.tripStatus}
+                          onChange={e => setNewTrip({...newTrip, tripStatus: e.target.value})}>
+                          <option value="Draft">Draft</option>
+                          <option value="Dispatched">Dispatched</option>
+                          <option value="Completed">Completed</option>
+                          <option value="Cancelled">Cancelled</option>
                         </select>
                       </div>
                       <div className="d-flex justify-content-end gap-2">
                         <button type="button" className="btn-custom btn-secondary-custom shadow-sm" onClick={() => {
                           setIsAddModalOpen(false);
                           setEditingTripId(null);
-                          setNewTrip({ route: '', driver: '', vehicle: '', status: 'Scheduled', date: '' });
+                          setNewTrip(emptyTrip);
                         }}>Cancel</button>
                         <button type="submit" className="btn-custom btn-primary-gradient shadow-sm" disabled={isSubmitting}>
                           {isSubmitting ? 'Saving...' : editingTripId ? 'Save Changes' : 'Add Trip'}

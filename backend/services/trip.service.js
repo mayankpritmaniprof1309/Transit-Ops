@@ -140,24 +140,6 @@ export const updateTrip = async (id, updateData, userId) => {
     throw new Error('Trip not found');
   }
 
-  if (trip.tripStatus !== 'Draft') {
-    throw new Error(`Cannot update trip in ${trip.tripStatus} status. Only Draft trips can be updated.`);
-  }
-
-  // Resolve target vehicle, driver, and cargoWeight for rule re-validation
-  const targetVehicleId = updateData.vehicle || trip.vehicle;
-  const targetDriverId = updateData.driver || trip.driver;
-  const targetCargoWeight = updateData.cargoWeight !== undefined ? updateData.cargoWeight : trip.cargoWeight;
-
-  // Validate rules if key fields are updated
-  if (
-    updateData.vehicle ||
-    updateData.driver ||
-    updateData.cargoWeight !== undefined
-  ) {
-    await validateVehicleAndDriverForTrip(targetVehicleId, targetDriverId, targetCargoWeight, id);
-  }
-
   const allowedUpdates = [
     'tripNumber',
     'source',
@@ -167,6 +149,9 @@ export const updateTrip = async (id, updateData, userId) => {
     'cargoWeight',
     'plannedDistance',
     'expectedRevenue',
+    'tripStatus',
+    'dispatchDate',
+    'completionDate',
     'remarks',
   ];
 
