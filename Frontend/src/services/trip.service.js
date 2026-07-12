@@ -54,6 +54,18 @@ class TripService {
     }
     return new Promise(resolve => setTimeout(() => resolve({ data: { success: true } }), 500));
   }
+
+  async updateTrip(id, tripData) {
+    // In a real app: return await axios.put(`/api/trips/${id}`, tripData);
+    const trips = getStoredTrips();
+    const index = trips.findIndex(t => t.id === parseInt(id));
+    if (index !== -1) {
+      trips[index] = { ...trips[index], ...tripData };
+      saveStoredTrips(trips);
+      return new Promise(resolve => setTimeout(() => resolve({ data: trips[index] }), 500));
+    }
+    return Promise.reject(new Error('Trip not found'));
+  }
 }
 
 export default new TripService();
