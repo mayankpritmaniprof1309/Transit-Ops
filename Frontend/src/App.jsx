@@ -11,7 +11,7 @@ import DriversPage from './pages/driver/DriversPage';
 import FuelPage from './pages/fuel/FuelPage';
 import Login from './pages/auth/Login';
 import ExpensePage from './pages/expense/ExpensePage';
-
+import Register from './pages/auth/Register.jsx';
 
 
 
@@ -139,11 +139,12 @@ function App() {
             }
           />
 
-          {/* Real Login Route */}
+          {/* Auth Routes */}
           <Route
             path="/login"
             element={<Login onAuthSuccess={() => window.location.href = '/dashboard'} />}
           />
+          <Route path="/register" element={<Register />} />
 
           {/* Fallbacks */}
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
