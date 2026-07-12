@@ -1,9 +1,9 @@
-import * as userService from '../services/user.service.js';
+import * as authService from '../services/auth.service.js';
 import {
   createUserSchema,
   updateUserSchema,
   loginUserSchema,
-} from '../validations/user.validation.js';
+} from '../validations/auth.validation.js';
 
 /**
  * Create user / Register
@@ -17,7 +17,7 @@ export const createUser = async (req, res, next) => {
       return next(err);
     }
 
-    const user = await userService.createUser(req.body);
+    const user = await authService.createUser(req.body);
 
     res.status(201).json({
       success: true,
@@ -42,7 +42,7 @@ export const loginUser = async (req, res, next) => {
     }
 
     const { email, password } = req.body;
-    const result = await userService.loginUser(email, password);
+    const result = await authService.loginUser(email, password);
 
     res.status(200).json({
       success: true,
@@ -59,7 +59,7 @@ export const loginUser = async (req, res, next) => {
  */
 export const getAllUsers = async (req, res, next) => {
   try {
-    const users = await userService.getAllUsers(req.query);
+    const users = await authService.getAllUsers(req.query);
 
     res.status(200).json({
       success: true,
@@ -76,7 +76,7 @@ export const getAllUsers = async (req, res, next) => {
  */
 export const getUserById = async (req, res, next) => {
   try {
-    const user = await userService.getUserById(req.params.id);
+    const user = await authService.getUserById(req.params.id);
 
     res.status(200).json({
       success: true,
@@ -100,7 +100,7 @@ export const updateUser = async (req, res, next) => {
       return next(err);
     }
 
-    const user = await userService.updateUser(req.params.id, req.body);
+    const user = await authService.updateUser(req.params.id, req.body);
 
     res.status(200).json({
       success: true,
@@ -117,7 +117,7 @@ export const updateUser = async (req, res, next) => {
  */
 export const deleteUser = async (req, res, next) => {
   try {
-    const user = await userService.deleteUser(req.params.id);
+    const user = await authService.deleteUser(req.params.id);
 
     res.status(200).json({
       success: true,

@@ -4,7 +4,7 @@ import { errorHandler } from './middleware/error.js';
 
 // Import Routes
 import driverRoutes from './routes/driver.routes.js';
-import userRoutes from './routes/user.routes.js';
+import authRoutes from './routes/auth.routes.js';
 import vehicleRoutes from './routes/vehicle.routes.js';
 import tripRoutes from './routes/trip.routes.js';
 import fuelRoutes from './routes/fuel.routes.js';
@@ -25,7 +25,7 @@ app.use(express.urlencoded({ extended: true }));
 
 // Routes
 app.use('/api/drivers', driverRoutes);
-app.use('/api/users', userRoutes);
+app.use('/api/users', authRoutes);
 app.use('/api/vehicles', vehicleRoutes);
 app.use('/api/trips', tripRoutes);
 app.use('/api/fuel-logs', fuelRoutes);
