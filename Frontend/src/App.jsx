@@ -5,10 +5,10 @@ import ProtectedRoute from './components/common/ProtectedRoute.jsx';
 import Dashboard from './pages/dashboard/Dashboard.jsx';
 import TripPage from './pages/trip/TripPage';
 import MaintenancePage from './pages/maintenance/MaintenancePage';
+import VehiclesPage from './pages/vehicle/VehiclesPage';
+import DriversPage from './pages/driver/DriversPage';
 
 // Simple placeholders for routes not yet implemented as separate modules
-const Vehicles = () => <div className="p-4 bg-white rounded-4 shadow-sm"><h2>Vehicles Page</h2><p className="text-secondary">Vehicle list and details page placeholder.</p></div>;
-const Drivers = () => <div className="p-4 bg-white rounded-4 shadow-sm"><h2>Drivers Page</h2><p className="text-secondary">Driver profiles and safety scores placeholder.</p></div>;
 const FuelLogs = () => <div className="p-4 bg-white rounded-4 shadow-sm"><h2>Fuel Logs Page</h2><p className="text-secondary">Fuel log operations and efficiency log placeholder.</p></div>;
 const Expenses = () => <div className="p-4 bg-white rounded-4 shadow-sm"><h2>Expenses Page</h2><p className="text-secondary">Track operational costs and expenses placeholder.</p></div>;
 const Reports = () => <div className="p-4 bg-white rounded-4 shadow-sm"><h2>Reports Page</h2><p className="text-secondary">Fleet ROI and efficiency stats reports placeholder.</p></div>;
@@ -44,7 +44,7 @@ function App() {
           element={
             <ProtectedRoute>
               <DashboardLayout>
-                <Vehicles />
+                <VehiclesPage />
               </DashboardLayout>
             </ProtectedRoute>
           }
@@ -54,7 +54,7 @@ function App() {
           element={
             <ProtectedRoute>
               <DashboardLayout>
-                <Drivers />
+                <DriversPage />
               </DashboardLayout>
             </ProtectedRoute>
           }
