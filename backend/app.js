@@ -39,7 +39,7 @@ app.get('/', (req, res) => {
 });
 
 // Fallback Route for Undefined Endpoints
-app.use('*', (req, res) => {
+app.use((req, res) => {
   res.status(404).json({
     success: false,
     message: `Endpoint ${req.originalUrl} not found.`,
