@@ -10,6 +10,7 @@ import tripRoutes from './routes/trip.routes.js';
 import fuelRoutes from './routes/fuel.routes.js';
 import dashboardRoutes from './routes/dashboard.routes.js';
 import maintenanceRoutes from './routes/maintenance.routes.js';
+import expenseRoutes from './routes/expense.routes.js';
 import reportRoutes from './routes/report.routes.js';
 
 // Import Middleware
@@ -31,6 +32,7 @@ app.use('/api/trips', tripRoutes);
 app.use('/api/fuel-logs', fuelRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/maintenance', maintenanceRoutes);
+app.use('/api/expenses', expenseRoutes);
 app.use('/api/reports', reportRoutes);
 
 // Base route

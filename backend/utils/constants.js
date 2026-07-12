@@ -1,5 +1,4 @@
-// User roles
-export const USER_ROLES = ['Fleet Manager', 'Driver', 'Safety Officer', 'Financial Analyst'];
+export const USER_ROLES = ['Fleet Manager', 'Driver', 'Safety Officer', 'Financial Analyst', 'Dispatcher'];
 
 // Driver statuses
 export const DRIVER_STATUSES = ['Available', 'On Trip', 'Off Duty', 'Suspended'];

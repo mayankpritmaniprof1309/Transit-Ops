@@ -1,5 +1,11 @@
-/* Import fonts and styles */
+@import 'bootstrap/dist/css/bootstrap.min.css';
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+/* =========================================================================
+   1. GLOBAL VARIABLES & DESIGN TOKENS
+   ========================================================================= */
 :root {
+  /* Brand Colors */
   --primary: #2563EB;
   --secondary: #3B82F6;
   --dark-sidebar: #0F172A;
@@ -10,21 +16,28 @@
   --text-secondary: #64748B;
   --card-bg: #FFFFFF;
 
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  /* Fonts */
+  --font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  
+  /* Transitions */
+  --transition-fast: 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-normal: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+/* =========================================================================
+   2. GLOBAL BODY & RESETS
+   ========================================================================= */
 html, body {
   margin: 0;
   padding: 0;
   width: 100%;
   min-height: 100vh;
+  font-family: var(--font-family);
   color: var(--text-primary);
   background-color: #F8FAFC;
   overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 /* Premium gradient background blobs */
@@ -66,7 +79,9 @@ html, body {
   z-index: 1;
 }
 
-/* Glassmorphism card utility */
+/* =========================================================================
+   3. GLASSMORPHISM UTILITIES
+   ========================================================================= */
 .glass-effect {
   background: rgba(255, 255, 255, 0.7);
   backdrop-filter: blur(12px);
@@ -75,13 +90,16 @@ html, body {
   box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.04);
 }
 
-/* Card layout rules from design guidelines */
+/* =========================================================================
+   4. CARDS (Solid White & Glass)
+   ========================================================================= */
 .premium-card {
   background-color: var(--card-bg);
   border-radius: 18px;
   border: 1px solid rgba(15, 23, 42, 0.05);
   box-shadow: 0 4px 20px 0 rgba(15, 23, 42, 0.03);
-  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.25s ease;
+  transition: transform var(--transition-normal), box-shadow var(--transition-normal);
+  padding: 1.5rem;
 }
 
 .premium-card:hover {
@@ -89,16 +107,22 @@ html, body {
   box-shadow: 0 10px 25px 0 rgba(15, 23, 42, 0.07);
 }
 
-/* Rounded 16px radius Buttons */
+/* =========================================================================
+   5. BUTTONS (Premium layout)
+   ========================================================================= */
 .btn-premium-primary {
   background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
   color: #FFFFFF;
   border: none;
   border-radius: 16px;
-  font-weight: 500;
+  font-weight: 600;
   padding: 0.65rem 1.4rem;
-  transition: all 0.25s ease;
+  transition: all var(--transition-normal);
   box-shadow: 0 4px 14px 0 rgba(37, 99, 235, 0.25);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
 }
 
 .btn-premium-primary:hover {
@@ -112,9 +136,13 @@ html, body {
   color: var(--text-primary);
   border: 1px solid rgba(100, 116, 139, 0.2);
   border-radius: 16px;
-  font-weight: 500;
+  font-weight: 600;
   padding: 0.65rem 1.4rem;
-  transition: all 0.25s ease;
+  transition: all var(--transition-normal);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
 }
 
 .btn-premium-secondary:hover {
@@ -128,10 +156,14 @@ html, body {
   color: #FFFFFF;
   border: none;
   border-radius: 16px;
-  font-weight: 500;
+  font-weight: 600;
   padding: 0.65rem 1.4rem;
-  transition: all 0.25s ease;
+  transition: all var(--transition-normal);
   box-shadow: 0 4px 14px 0 rgba(239, 68, 68, 0.25);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
 }
 
 .btn-premium-danger:hover {
@@ -140,7 +172,9 @@ html, body {
   transform: translateY(-1px);
 }
 
-/* Custom premium sidebar widths & responsiveness */
+/* =========================================================================
+   6. SIDEBAR & RESPONSIVENESS
+   ========================================================================= */
 .sidebar-container {
   width: 260px;
   min-height: 100vh;
@@ -178,7 +212,9 @@ html, body {
   }
 }
 
-/* Custom Form and Table controls styles */
+/* =========================================================================
+   7. TABLE STYLES
+   ========================================================================= */
 .premium-table {
   background-color: #FFFFFF;
   border-radius: 12px;

@@ -13,3 +13,16 @@ export const createDriverSchema = Joi.object({
   emergencyContact: Joi.string().trim().allow(null, '').optional(),
   createdBy: Joi.string().allow(null, '').optional()
 });
+
+export const updateDriverSchema = Joi.object({
+  fullName: Joi.string().trim().optional(),
+  licenseNumber: Joi.string().trim().uppercase().optional(),
+  licenseCategory: Joi.string().trim().optional(),
+  licenseExpiryDate: Joi.date().optional(),
+  contactNumber: Joi.string().trim().optional(),
+  email: Joi.string().email().trim().allow(null, '').optional(),
+  safetyScore: Joi.number().min(0).max(100).optional(),
+  status: Joi.string().valid('Available', 'On Trip', 'Off Duty', 'Suspended').optional(),
+  address: Joi.string().trim().allow(null, '').optional(),
+  emergencyContact: Joi.string().trim().allow(null, '').optional(),
+});

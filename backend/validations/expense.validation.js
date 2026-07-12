@@ -63,5 +63,45 @@ const commonExpenseValidationRules = [
 // Validation array for creating an expense
 export const createExpenseValidation = [...commonExpenseValidationRules];
 
-// Validation array for updating an expense
-export const updateExpenseValidation = [...commonExpenseValidationRules];
+// Validation array for updating an expense (all fields optional but validated if supplied)
+export const updateExpenseValidation = [
+  body('vehicle')
+    .optional()
+    .trim()
+    .isMongoId().withMessage('Vehicle must be a valid MongoDB ObjectId'),
+
+  body('trip')
+    .optional({ nullable: true, checkFalsy: true })
+    .trim()
+    .isMongoId().withMessage('Trip must be a valid MongoDB ObjectId'),
+
+  body('expenseType')
+    .optional()
+    .trim()
+    .isIn(['Fuel', 'Maintenance', 'Toll', 'Insurance', 'Repair', 'Other'])
+    .withMessage('Expense type must be one of: Fuel, Maintenance, Toll, Insurance, Repair, Other'),
+
+  body('amount')
+    .optional()
+    .isFloat({ gt: 0 }).withMessage('Amount must be greater than zero.'),
+
+  body('expenseDate')
+    .optional()
+    .isISO8601().withMessage('Expense date must be a valid ISO Date'),
+
+  body('description')
+    .optional({ nullable: true, checkFalsy: true })
+    .trim()
+    .isLength({ max: 500 }).withMessage('Description cannot exceed 500 characters'),
+
+  body('paymentMethod')
+    .optional({ nullable: true, checkFalsy: true })
+    .trim()
+    .isIn(['Cash', 'Card', 'UPI', 'Bank Transfer'])
+    .withMessage('Payment method must be one of: Cash, Card, UPI, Bank Transfer'),
+
+  body('receiptUrl')
+    .optional({ nullable: true, checkFalsy: true })
+    .trim()
+    .isURL().withMessage('Receipt URL must be a valid URL'),
+];

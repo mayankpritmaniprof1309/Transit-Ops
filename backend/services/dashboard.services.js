@@ -24,8 +24,8 @@ export const getDashboardKPIs = async (filters = {}) => {
     Driver.countDocuments({ status: 'Available' }),
     Driver.countDocuments({ status: 'On Trip' }),
     Trip.countDocuments(),
-    Trip.countDocuments({ status: 'Dispatched' }),
-    Trip.countDocuments({ status: 'Draft' }),
+    Trip.countDocuments({ tripStatus: 'Dispatched' }),
+    Trip.countDocuments({ tripStatus: 'Draft' }),
   ]);
 
   const fleetUtilization = totalVehicles > 0 ? ((activeVehicles / totalVehicles) * 100).toFixed(2) : 0;

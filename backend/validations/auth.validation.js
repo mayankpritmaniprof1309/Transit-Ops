@@ -1,6 +1,6 @@
 import Joi from 'joi';
 
-const roles = ['Fleet Manager', 'Driver', 'Safety Officer', 'Financial Analyst'];
+const roles = ['Fleet Manager', 'Driver', 'Safety Officer', 'Financial Analyst', 'Dispatcher'];
 
 export const createUserSchema = Joi.object({
   fullName: Joi.string().trim().required().messages({
