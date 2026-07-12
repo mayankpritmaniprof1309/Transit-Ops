@@ -11,6 +11,8 @@ import DriversPage from './pages/driver/DriversPage';
 import FuelPage from './pages/fuel/FuelPage';
 import Login from './pages/auth/Login';
 import Register from './pages/auth/Register.jsx';
+import ForgotPassword from './pages/auth/ForgotPassword.jsx';
+import ResetPassword from './pages/auth/ResetPassword.jsx';
 
 
 
@@ -150,6 +152,8 @@ function App() {
             element={<Login onAuthSuccess={() => window.location.href = '/dashboard'} />}
           />
           <Route path="/register" element={<Register />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password/:token" element={<ResetPassword />} />
 
           {/* Fallbacks */}
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
