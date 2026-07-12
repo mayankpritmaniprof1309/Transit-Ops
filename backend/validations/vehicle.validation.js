@@ -31,11 +31,11 @@ export const createVehicleSchema = Joi.object({
 
   vehicleType: Joi.string()
     .trim()
-    .valid('Truck', 'Van', 'Mini Truck', 'Pickup', 'Trailer', 'Other')
+    .valid('Truck', 'Van', 'Mini Truck', 'Pickup', 'Trailer', 'Car', 'Other')
     .required()
     .messages({
       'any.required': 'Vehicle type is required',
-      'any.only': 'Vehicle type must be one of: Truck, Van, Mini Truck, Pickup, Trailer, Other',
+      'any.only': 'Vehicle type must be one of: Truck, Van, Mini Truck, Pickup, Trailer, Car, Other',
     }),
 
   maximumLoadCapacity: Joi.number()
@@ -100,10 +100,10 @@ export const updateVehicleSchema = Joi.object({
 
   vehicleType: Joi.string()
     .trim()
-    .valid('Truck', 'Van', 'Mini Truck', 'Pickup', 'Trailer', 'Other')
+    .valid('Truck', 'Van', 'Mini Truck', 'Pickup', 'Trailer', 'Car', 'Other')
     .optional()
     .messages({
-      'any.only': 'Vehicle type must be one of: Truck, Van, Mini Truck, Pickup, Trailer, Other',
+      'any.only': 'Vehicle type must be one of: Truck, Van, Mini Truck, Pickup, Trailer, Car, Other',
     }),
 
   maximumLoadCapacity: Joi.number()
