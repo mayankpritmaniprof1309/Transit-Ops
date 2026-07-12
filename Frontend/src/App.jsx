@@ -5,11 +5,11 @@ import TripPage from './pages/trip/TripPage';
 import MaintenancePage from './pages/maintenance/MaintenancePage';
 import './App.css';
 import { motion } from 'framer-motion';
+import VehiclesPage from './pages/vehicle/VehiclesPage';
+import DriversPage from './pages/driver/DriversPage';
 
 // Mock components for routing
 const Dashboard = () => <div className="p-4"><h2>Dashboard</h2></div>;
-const Vehicles = () => <div className="p-4"><h2>Vehicles</h2></div>;
-const Drivers = () => <div className="p-4"><h2>Drivers</h2></div>;
 
 const Sidebar = () => {
   const location = useLocation();
@@ -102,8 +102,8 @@ function App() {
           <main className="flex-grow-1 p-2" style={{ overflowY: 'auto' }}>
             <Routes>
               <Route path="/" element={<Dashboard />} />
-              <Route path="/vehicles" element={<Vehicles />} />
-              <Route path="/drivers" element={<Drivers />} />
+              <Route path="/vehicles" element={<VehiclesPage />} />
+              <Route path="/drivers" element={<DriversPage />} />
               <Route path="/trips" element={<TripPage />} />
               <Route path="/maintenance" element={<MaintenancePage />} />
             </Routes>
