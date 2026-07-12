@@ -4,6 +4,7 @@ import cors from 'cors';
 // Import Routes
 import driverRoutes from './routes/driver.routes.js';
 import fuelRoutes from './routes/fuel.routes.js';
+import dashboardRoutes from './routes/dashboard.routes.js';
 
 // Import Middleware
 import { requestLogger } from './middleware/logger.js';
@@ -20,6 +21,7 @@ app.use(express.urlencoded({ extended: true }));
 // Routes
 app.use('/api/drivers', driverRoutes);
 app.use('/api/fuel-logs', fuelRoutes);
+app.use('/api/dashboard', dashboardRoutes);
 
 // Base route for testing
 app.get('/', (req, res) => {
