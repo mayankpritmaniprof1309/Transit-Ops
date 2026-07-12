@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import api from '../../services/api.js';
 import { getAllVehicles } from '../../services/vehicle.service.js';
+import tripService from '../../services/trip.service.js';
 import { FaTruck, FaMap, FaDollarSign, FaCalendarAlt, FaFileInvoice, FaCreditCard } from 'react-icons/fa';
 
 export default function ExpenseForm({ expense, onSave, onCancel, loading }) {
@@ -32,11 +33,19 @@ export default function ExpenseForm({ expense, onSave, onCancel, loading }) {
         }
         setVehicles(vehList);
 
-        // Load Trips (directly querying the backend router to get real records)
-        const tripRes = await api.get('/trips');
+        // Load Trips using the tripService (which pulls from local storage mock/synced trips)
         let tripList = [];
-        if (tripRes.data && tripRes.data.success && tripRes.data.data) {
-          tripList = Array.isArray(tripRes.data.data) ? tripRes.data.data : (tripRes.data.data.trips || []);
+        try {
+          const resTrips = await tripService.getAllTrips();
+          const tripsData = resTrips?.data || [];
+          tripList = tripsData.map(t => ({
+            _id: t._id || t.id?.toString() || '',
+            startLocation: t.startLocation || t.route || `Trip #${t.id}`,
+            endLocation: t.endLocation || '',
+            tripStatus: t.tripStatus || t.status || 'Draft'
+          }));
+        } catch (tErr) {
+          console.warn('Failed to load trips from service.', tErr);
         }
         setTrips(tripList);
       } catch (err) {
@@ -139,7 +148,7 @@ export default function ExpenseForm({ expense, onSave, onCancel, loading }) {
               <option value="">No Associated Trip (N/A)</option>
               {trips.map((t) => (
                 <option key={t._id} value={t._id}>
-                  {t.startLocation} → {t.endLocation} ({t.tripStatus || 'Draft'})
+                  {t.startLocation}{t.endLocation ? ` → ${t.endLocation}` : ''} ({t.tripStatus || 'Draft'})
                 </option>
               ))}
             </select>
