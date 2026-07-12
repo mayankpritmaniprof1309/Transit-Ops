@@ -123,7 +123,7 @@ export const FuelList = ({ onAddNew, onEdit }) => {
           </h1>
           <p className="text-muted mb-0">Record, inspect, and analyze vehicle refueling activities.</p>
         </div>
-        <button onClick={onAddNew} className="btn-custom btn-primary-gradient shadow-sm">
+        <button onClick={onAddNew} className="btn-premium-primary shadow-sm">
           <FaPlus /> Record Fuel Purchase
         </button>
       </div>
@@ -179,23 +179,22 @@ export const FuelList = ({ onAddNew, onEdit }) => {
         <div className="row g-3">
           {[...Array(LIMIT)].map((_, idx) => (
             <div key={idx} className="col-md-6 col-lg-3">
-              <div className="card-solid p-4">
-                <div className="skeleton-shimmer skeleton-box w-75 mb-3" style={{ height: '1.25rem' }}></div>
-                <div className="skeleton-shimmer skeleton-box w-50 mb-3"></div>
-                <div className="skeleton-shimmer skeleton-box w-100 mb-3"></div>
-                <div className="skeleton-shimmer skeleton-box w-25"></div>
+              <div className="premium-card p-4 text-center">
+                <div className="spinner-border text-primary" role="status">
+                  <span className="visually-hidden">Loading...</span>
+                </div>
               </div>
             </div>
           ))}
         </div>
       ) : logs.length === 0 ? (
-        <div className="text-center py-5 card-solid">
+        <div className="text-center py-5 premium-card">
           <div className="d-inline-flex bg-light p-3 rounded-circle text-muted mb-3 fs-1">⛽</div>
           <h3 className="mb-2">No refueling logs found</h3>
           <p className="text-muted mb-4" style={{ maxWidth: '400px', margin: '0 auto' }}>
             No purchase records match your search criteria. Try modifying your filters or insert a new fuel log.
           </p>
-          <button onClick={onAddNew} className="btn-custom btn-secondary-custom">
+          <button onClick={onAddNew} className="btn-premium-secondary">
             Log First Purchase
           </button>
         </div>
@@ -255,48 +254,59 @@ export const FuelList = ({ onAddNew, onEdit }) => {
       {/* Delete Confirmation Modal */}
       <AnimatePresence>
         {deleteTargetId && (
-          <div className="modal-overlay-custom">
+          <>
             <motion.div
-              className="modal-content-custom"
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.95, opacity: 0 }}
+              className="modal-backdrop bg-dark"
+              style={{ display: 'block', zIndex: 1040, opacity: 0.5 }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 0.5 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setDeleteTargetId(null)}
+            />
+            <motion.div
+              className="modal d-block"
+              style={{ zIndex: 1050 }}
+              initial={{ scale: 0.95, opacity: 0, y: -50 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.95, opacity: 0, y: -50 }}
             >
-              <div className="modal-header-custom bg-danger text-white">
-                <h5 className="modal-title m-0 d-flex align-items-center gap-2">
-                  <FaTrash /> Remove Fuel Log?
-                </h5>
-                <button
-                  type="button"
-                  onClick={() => setDeleteTargetId(null)}
-                  style={{ background: 'none', border: 'none', color: '#fff', fontSize: '1.25rem', cursor: 'pointer' }}
-                >
-                  <FaTimes />
-                </button>
-              </div>
-              <div className="modal-body-custom">
-                <p className="mb-0">
-                  Are you certain you want to permanently discard this fuel purchase record? This action cannot be undone.
-                </p>
-              </div>
-              <div className="modal-footer-custom">
-                <button
-                  onClick={() => setDeleteTargetId(null)}
-                  className="btn-custom btn-secondary-custom py-2"
-                  disabled={isDeleting}
-                >
-                  Keep Log
-                </button>
-                <button
-                  onClick={handleConfirmDelete}
-                  className="btn-custom btn-danger-custom py-2"
-                  disabled={isDeleting}
-                >
-                  {isDeleting ? 'Deleting...' : 'Confirm Delete'}
-                </button>
+              <div className="modal-dialog modal-dialog-centered">
+                <div className="modal-content premium-card border-0 p-0">
+                  <div className="modal-header border-bottom-0 pb-0">
+                    <h5 className="modal-title m-0 d-flex align-items-center gap-2 text-danger fw-bold">
+                      <FaTrash /> Remove Fuel Log?
+                    </h5>
+                    <button
+                      type="button"
+                      className="btn-close"
+                      onClick={() => setDeleteTargetId(null)}
+                    ></button>
+                  </div>
+                  <div className="modal-body">
+                    <p className="mb-0">
+                      Are you certain you want to permanently discard this fuel purchase record? This action cannot be undone.
+                    </p>
+                  </div>
+                  <div className="modal-footer border-top-0 pt-0 justify-content-end gap-2">
+                    <button
+                      onClick={() => setDeleteTargetId(null)}
+                      className="btn-premium-secondary py-2"
+                      disabled={isDeleting}
+                    >
+                      Keep Log
+                    </button>
+                    <button
+                      onClick={handleConfirmDelete}
+                      className="btn-premium-danger py-2"
+                      disabled={isDeleting}
+                    >
+                      {isDeleting ? 'Deleting...' : 'Confirm Delete'}
+                    </button>
+                  </div>
+                </div>
               </div>
             </motion.div>
-          </div>
+          </>
         )}
       </AnimatePresence>
     </div>
