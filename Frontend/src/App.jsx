@@ -8,15 +8,12 @@ import TripPage from './pages/trip/TripPage';
 import MaintenancePage from './pages/maintenance/MaintenancePage';
 import VehiclesPage from './pages/vehicle/VehiclesPage';
 import DriversPage from './pages/driver/DriversPage';
+import FuelPage from './pages/fuel/FuelPage';
 import Login from './pages/auth/Login';
 
-// Simple placeholders for routes not yet implemented as separate modules
-const FuelLogs = () => (
-  <div className="p-4 bg-white rounded-4 shadow-sm">
-    <h2>Fuel Logs Page</h2>
-    <p className="text-secondary">Fuel log operations and efficiency log placeholder.</p>
-  </div>
-);
+
+
+
 
 const Expenses = () => (
   <div className="p-4 bg-white rounded-4 shadow-sm">
@@ -110,7 +107,7 @@ function App() {
             element={
               <ProtectedRoute>
                 <DashboardLayout>
-                  <FuelLogs />
+                  <FuelPage />
                 </DashboardLayout>
               </ProtectedRoute>
             }
