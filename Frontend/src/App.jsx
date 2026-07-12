@@ -1,17 +1,28 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Link, useLocation } from 'react-router-dom';
 import { FiHome, FiTruck, FiUsers, FiMap, FiSettings, FiLogOut, FiTool, FiBell, FiSearch, FiUser } from 'react-icons/fi';
-import TripPage from './pages/trip/TripPage';
-import MaintenancePage from './pages/maintenance/MaintenancePage';
-import './App.css';
 import { motion } from 'framer-motion';
+
+// Page Imports
 import VehiclesPage from './pages/vehicle/VehiclesPage';
 import DriversPage from './pages/driver/DriversPage';
+import TripPage from './pages/trip/TripPage';
+import MaintenancePage from './pages/maintenance/MaintenancePage';
+import Login from './pages/auth/Login';
 
-// Mock components for routing
-const Dashboard = () => <div className="p-4"><h2>Dashboard</h2></div>;
+// Services
+import { logout } from './services/auth.service';
+import './App.css';
 
-const Sidebar = () => {
+// Mock dashboard
+const Dashboard = () => (
+  <div className="p-4">
+    <h2>Smart Transport Dashboard</h2>
+    <p className="text-muted">Welcome to the TransitOps smart transport dashboard.</p>
+  </div>
+);
+
+const Sidebar = ({ onLogout }) => {
   const location = useLocation();
 
   const menuItems = [
@@ -20,7 +31,6 @@ const Sidebar = () => {
     { path: '/drivers', name: 'Drivers', icon: <FiUsers /> },
     { path: '/trips', name: 'Trips', icon: <FiMap /> },
     { path: '/maintenance', name: 'Maintenance', icon: <FiTool /> },
-    { path: '/settings', name: 'Settings', icon: <FiSettings /> },
   ];
 
   return (
@@ -46,16 +56,25 @@ const Sidebar = () => {
       </div>
       
       <div className="mt-auto">
-        <Link to="/logout" className="sidebar-link text-danger mt-4">
+        <button
+          onClick={onLogout}
+          className="sidebar-link text-danger mt-4 border-0 bg-transparent text-start w-100 d-flex align-items-center gap-2"
+          style={{ cursor: 'pointer' }}
+        >
           <span className="sidebar-icon"><FiLogOut /></span>
           Logout
-        </Link>
+        </button>
       </div>
     </div>
   );
 };
 
 const Navbar = () => {
+  const [currentUser, setCurrentUser] = useState(() => {
+    const userStr = localStorage.getItem('user');
+    return userStr ? JSON.parse(userStr) : null;
+  });
+
   return (
     <nav className="glass-navbar px-4 py-3 d-flex justify-content-between align-items-center sticky-top">
       <div className="search-icon-wrapper" style={{ width: '300px' }}>
@@ -81,8 +100,8 @@ const Navbar = () => {
             <FiUser />
           </div>
           <div className="d-none d-md-block">
-            <p className="m-0 fw-semibold text-dark fs-6 lh-1">Admin User</p>
-            <small className="text-secondary">Fleet Manager</small>
+            <p className="m-0 fw-semibold text-dark fs-6 lh-1">{currentUser?.fullName || 'Admin User'}</p>
+            <small className="text-secondary">{currentUser?.role || 'Fleet Manager'}</small>
           </div>
         </div>
       </div>
@@ -91,10 +110,27 @@ const Navbar = () => {
 };
 
 function App() {
+  const [isAuthenticated, setIsAuthenticated] = useState(() => {
+    return !!localStorage.getItem('token');
+  });
+
+  const handleLogout = () => {
+    logout();
+    setIsAuthenticated(false);
+  };
+
+  const handleAuthSuccess = () => {
+    setIsAuthenticated(true);
+  };
+
+  if (!isAuthenticated) {
+    return <Login onAuthSuccess={handleAuthSuccess} />;
+  }
+
   return (
     <Router>
       <div className="d-flex" style={{ minHeight: '100vh', background: 'transparent' }}>
-        <Sidebar />
+        <Sidebar onLogout={handleLogout} />
         
         <div className="flex-grow-1 d-flex flex-column" style={{ width: 'calc(100% - 260px)' }}>
           <Navbar />
