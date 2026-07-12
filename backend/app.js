@@ -7,10 +7,15 @@ import driverRoutes from './routes/driver.routes.js';
 import userRoutes from './routes/user.routes.js';
 import vehicleRoutes from './routes/vehicle.routes.js';
 import tripRoutes from './routes/trip.routes.js';
+import fuelRoutes from './routes/fuel.routes.js';
+
+// Import Middleware
+import { requestLogger } from './middleware/logger.js';
 
 const app = express();
 
 // Middleware
+app.use(requestLogger);
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -20,6 +25,7 @@ app.use('/api/drivers', driverRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/vehicles', vehicleRoutes);
 app.use('/api/trips', tripRoutes);
+app.use('/api/fuel-logs', fuelRoutes);
 
 // Base route
 app.get('/', (req, res) => {
@@ -34,7 +40,7 @@ app.use('*', (req, res) => {
   });
 });
 
-// Global Error Handler
+// Error Handler Middleware
 app.use(errorHandler);
 
 export default app;
