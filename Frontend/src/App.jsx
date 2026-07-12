@@ -10,17 +10,13 @@ import VehiclesPage from './pages/vehicle/VehiclesPage';
 import DriversPage from './pages/driver/DriversPage';
 import FuelPage from './pages/fuel/FuelPage';
 import Login from './pages/auth/Login';
+import ExpensePage from './pages/expense/ExpensePage';
 
 
 
 
 
-const Expenses = () => (
-  <div className="p-4 bg-white rounded-4 shadow-sm">
-    <h2>Expenses Page</h2>
-    <p className="text-secondary">Track operational costs and expenses placeholder.</p>
-  </div>
-);
+
 
 const Reports = () => (
   <div className="p-4 bg-white rounded-4 shadow-sm">
@@ -117,7 +113,7 @@ function App() {
             element={
               <ProtectedRoute>
                 <DashboardLayout>
-                  <Expenses />
+                  <ExpensePage />
                 </DashboardLayout>
               </ProtectedRoute>
             }
