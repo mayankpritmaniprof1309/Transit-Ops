@@ -2,28 +2,48 @@ import React, { useState, useEffect } from 'react';
 import { FiPlus, FiDownload, FiSearch, FiFilter, FiX } from 'react-icons/fi';
 import MaintenanceTable from '../../components/maintenance/MaintenanceTable';
 import MaintenanceService from '../../services/maintenance.service';
+import { getAllVehicles } from '../../services/vehicle.service.js';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const MaintenancePage = () => {
   const [records, setRecords] = useState([]);
+  const [vehicles, setVehicles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
   
   // Modal State
-  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [newRecord, setNewRecord] = useState({ vehicle: '', type: '', cost: '', status: 'Pending', date: '' });
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [currentId, setCurrentId] = useState(null);
+  
+  const [formData, setFormData] = useState({ 
+    vehicle: '', 
+    maintenanceType: '', 
+    cost: '', 
+    maintenanceStatus: 'Pending', 
+    maintenanceDate: '' 
+  });
+  
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
-    loadRecords();
+    loadDependencies();
   }, []);
 
-  const loadRecords = async () => {
+  const loadDependencies = async () => {
     setLoading(true);
     try {
-      const response = await MaintenanceService.getAllMaintenanceRecords();
-      setRecords(response.data);
+      const [maintenanceRes, vehiclesRes] = await Promise.all([
+        MaintenanceService.getAllMaintenanceRecords(),
+        getAllVehicles({ limit: 100 })
+      ]);
+      
+      setRecords(maintenanceRes.data || []);
+      
+      if (vehiclesRes.success && vehiclesRes.data) {
+        setVehicles(vehiclesRes.data);
+      }
     } catch (error) {
       console.error("Error loading maintenance records", error);
     } finally {
@@ -33,9 +53,36 @@ const MaintenancePage = () => {
 
   const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this maintenance record?")) {
-      await MaintenanceService.deleteMaintenanceRecord(id);
-      setRecords(records.filter(r => r.id !== id));
+      try {
+        await MaintenanceService.deleteMaintenanceRecord(id);
+        setRecords(records.filter(r => (r._id || r.id) !== id));
+      } catch (err) {
+        alert("Failed to delete record: " + err.message);
+      }
     }
+  };
+
+  const handleEdit = (record) => {
+    const vehicleId = typeof record.vehicle === 'object' && record.vehicle ? record.vehicle._id : record.vehicle;
+    setFormData({
+      vehicle: vehicleId || '',
+      maintenanceType: record.maintenanceType || record.type || '',
+      cost: record.cost || '',
+      maintenanceStatus: record.maintenanceStatus || record.status || 'Pending',
+      maintenanceDate: record.maintenanceDate 
+        ? new Date(record.maintenanceDate).toISOString().split('T')[0] 
+        : (record.date || '')
+    });
+    setCurrentId(record._id || record.id);
+    setIsEditMode(true);
+    setIsModalOpen(true);
+  };
+
+  const handleAddNew = () => {
+    setFormData({ vehicle: '', maintenanceType: '', cost: '', maintenanceStatus: 'Pending', maintenanceDate: '' });
+    setIsEditMode(false);
+    setCurrentId(null);
+    setIsModalOpen(true);
   };
 
   // 1. Export Functionality
@@ -45,7 +92,14 @@ const MaintenancePage = () => {
     const headers = ['ID', 'Vehicle', 'Type', 'Date', 'Cost', 'Status'];
     const csvRows = [
       headers.join(','),
-      ...filteredRecords.map(r => `${r.id},"${r.vehicle}","${r.type}",${r.date},${r.cost},${r.status}`)
+      ...filteredRecords.map(r => {
+        const vName = typeof r.vehicle === 'object' ? r.vehicle?.registrationNumber || r.vehicle?._id : r.vehicle;
+        const id = r._id || r.id;
+        const date = r.maintenanceDate ? new Date(r.maintenanceDate).toLocaleDateString() : r.date;
+        const type = r.maintenanceType || r.type;
+        const status = r.maintenanceStatus || r.status;
+        return `${id},"${vName}","${type}",${date},${r.cost},${status}`;
+      })
     ];
     
     const csvContent = "data:text/csv;charset=utf-8," + csvRows.join('\n');
@@ -58,28 +112,40 @@ const MaintenancePage = () => {
     document.body.removeChild(link);
   };
 
-  // 2. Add Functionality
-  const handleAddSubmit = async (e) => {
+  // 2. Submit Functionality (Add/Edit)
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
     try {
-      const response = await MaintenanceService.createMaintenanceRecord(newRecord);
-      setRecords([...records, response.data]);
-      setIsAddModalOpen(false);
-      setNewRecord({ vehicle: '', type: '', cost: '', status: 'Pending', date: '' });
+      if (isEditMode) {
+        const response = await MaintenanceService.updateMaintenanceRecord(currentId, formData);
+        setRecords(records.map(r => (r._id || r.id) === currentId ? response.data : r));
+      } else {
+        const response = await MaintenanceService.createMaintenanceRecord(formData);
+        setRecords([...records, response.data]);
+      }
+      setIsModalOpen(false);
     } catch (error) {
-      console.error("Error creating maintenance record", error);
-      alert("Failed to add record");
+      console.error("Error saving maintenance record", error);
+      alert("Failed to save record: " + (error.response?.data?.message || error.message));
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const filteredRecords = records.filter(record => 
-    (record.vehicle?.toLowerCase().includes(searchTerm.toLowerCase()) || 
-    record.type?.toLowerCase().includes(searchTerm.toLowerCase())) &&
-    (statusFilter === 'All' || record.status === statusFilter)
-  );
+  const filteredRecords = records.filter(record => {
+    const vName = (typeof record.vehicle === 'object' && record.vehicle 
+      ? (record.vehicle.registrationNumber || record.vehicle.vehicleName || record.vehicle._id)
+      : String(record.vehicle || '')).toLowerCase();
+    
+    const typeStr = (record.maintenanceType || record.type || '').toLowerCase();
+    const matchSearch = vName.includes(searchTerm.toLowerCase()) || typeStr.includes(searchTerm.toLowerCase());
+    
+    const status = record.maintenanceStatus || record.status;
+    const matchStatus = statusFilter === 'All' || status === statusFilter;
+    
+    return matchSearch && matchStatus;
+  });
 
   return (
     <motion.div 
@@ -94,7 +160,7 @@ const MaintenancePage = () => {
           <button className="btn-custom btn-secondary-custom shadow-sm" onClick={handleExport}>
             <FiDownload /> Export
           </button>
-          <button className="btn-custom btn-primary-gradient shadow-sm" onClick={() => setIsAddModalOpen(true)}>
+          <button className="btn-custom btn-primary-gradient shadow-sm" onClick={handleAddNew}>
             <FiPlus /> Add Record
           </button>
         </div>
@@ -136,12 +202,12 @@ const MaintenancePage = () => {
           </div>
         </div>
       ) : (
-        <MaintenanceTable records={filteredRecords} onDelete={handleDelete} />
+        <MaintenanceTable records={filteredRecords} onEdit={handleEdit} onDelete={handleDelete} />
       )}
 
-      {/* Add Modal */}
+      {/* Add/Edit Modal */}
       <AnimatePresence>
-        {isAddModalOpen && (
+        {isModalOpen && (
           <>
             <motion.div 
               initial={{ opacity: 0 }}
@@ -149,7 +215,7 @@ const MaintenancePage = () => {
               exit={{ opacity: 0 }}
               className="modal-backdrop bg-dark"
               style={{ display: 'block', zIndex: 1040 }}
-              onClick={() => setIsAddModalOpen(false)}
+              onClick={() => setIsModalOpen(false)}
             />
             <motion.div 
               initial={{ opacity: 0, y: -50 }}
@@ -162,41 +228,53 @@ const MaintenancePage = () => {
               <div className="modal-dialog modal-dialog-centered">
                 <div className="modal-content premium-card border-0 p-0">
                   <div className="modal-header border-bottom-0 pb-0">
-                    <h5 className="modal-title fw-bold">Add Maintenance Record</h5>
-                    <button type="button" className="btn-close" onClick={() => setIsAddModalOpen(false)}></button>
+                    <h5 className="modal-title fw-bold">{isEditMode ? 'Edit' : 'Add'} Maintenance Record</h5>
+                    <button type="button" className="btn-close" onClick={() => setIsModalOpen(false)}></button>
                   </div>
                   <div className="modal-body">
-                    <form onSubmit={handleAddSubmit}>
+                    <form onSubmit={handleSubmit}>
                       <div className="mb-3">
-                        <label className="form-label text-secondary fw-semibold small">Vehicle ID</label>
-                        <input type="text" className="form-control" required value={newRecord.vehicle} onChange={e => setNewRecord({...newRecord, vehicle: e.target.value})} placeholder="e.g. Truck-001" />
+                        <label className="form-label text-secondary fw-semibold small">Vehicle</label>
+                        <select 
+                          className="form-select" 
+                          required 
+                          value={formData.vehicle} 
+                          onChange={e => setFormData({...formData, vehicle: e.target.value})}
+                        >
+                          <option value="">Select a Vehicle</option>
+                          {vehicles.map(v => (
+                            <option key={v._id} value={v._id}>
+                              {v.registrationNumber} ({v.make} {v.model})
+                            </option>
+                          ))}
+                        </select>
                       </div>
                       <div className="mb-3">
                         <label className="form-label text-secondary fw-semibold small">Maintenance Type</label>
-                        <input type="text" className="form-control" required value={newRecord.type} onChange={e => setNewRecord({...newRecord, type: e.target.value})} placeholder="e.g. Oil Change" />
+                        <input type="text" className="form-control" required value={formData.maintenanceType} onChange={e => setFormData({...formData, maintenanceType: e.target.value})} placeholder="e.g. Oil Change" />
                       </div>
                       <div className="row">
                         <div className="col-md-6 mb-3">
                           <label className="form-label text-secondary fw-semibold small">Cost ($)</label>
-                          <input type="number" className="form-control" required value={newRecord.cost} onChange={e => setNewRecord({...newRecord, cost: e.target.value})} placeholder="0.00" />
+                          <input type="number" className="form-control" required value={formData.cost} onChange={e => setFormData({...formData, cost: e.target.value})} placeholder="0.00" min="0" step="0.01" />
                         </div>
                         <div className="col-md-6 mb-3">
                           <label className="form-label text-secondary fw-semibold small">Date</label>
-                          <input type="date" className="form-control" required value={newRecord.date} onChange={e => setNewRecord({...newRecord, date: e.target.value})} />
+                          <input type="date" className="form-control" required value={formData.maintenanceDate} onChange={e => setFormData({...formData, maintenanceDate: e.target.value})} />
                         </div>
                       </div>
                       <div className="mb-4">
                         <label className="form-label text-secondary fw-semibold small">Status</label>
-                        <select className="form-select" value={newRecord.status} onChange={e => setNewRecord({...newRecord, status: e.target.value})}>
-                          <option>Pending</option>
-                          <option>In Progress</option>
-                          <option>Completed</option>
+                        <select className="form-select" value={formData.maintenanceStatus} onChange={e => setFormData({...formData, maintenanceStatus: e.target.value})}>
+                          <option value="Pending">Pending</option>
+                          <option value="In Progress">In Progress</option>
+                          <option value="Completed">Completed</option>
                         </select>
                       </div>
                       <div className="d-flex justify-content-end gap-2">
-                        <button type="button" className="btn-custom btn-secondary-custom shadow-sm" onClick={() => setIsAddModalOpen(false)}>Cancel</button>
+                        <button type="button" className="btn-custom btn-secondary-custom shadow-sm" onClick={() => setIsModalOpen(false)}>Cancel</button>
                         <button type="submit" className="btn-custom btn-primary-gradient shadow-sm" disabled={isSubmitting}>
-                          {isSubmitting ? 'Adding...' : 'Add Record'}
+                          {isSubmitting ? 'Saving...' : (isEditMode ? 'Save Changes' : 'Add Record')}
                         </button>
                       </div>
                     </form>

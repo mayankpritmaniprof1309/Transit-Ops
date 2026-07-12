@@ -1,33 +1,29 @@
-import axios from 'axios';
-
-// Mock data for Maintenance
-const MOCK_MAINTENANCE = [
-  { id: 1, vehicle: 'Truck-001', type: 'Oil Change', status: 'Pending', cost: 150, date: '2026-07-13' },
-  { id: 2, vehicle: 'Van-002', type: 'Tire Replacement', status: 'Completed', cost: 400, date: '2026-07-01' },
-  { id: 3, vehicle: 'Truck-005', type: 'Engine Check', status: 'In Progress', cost: 1200, date: '2026-07-12' },
-];
+import api from './api.js';
 
 class MaintenanceService {
   async getAllMaintenanceRecords() {
-    // In a real app: return await axios.get('/api/maintenance');
-    return new Promise(resolve => setTimeout(() => resolve({ data: MOCK_MAINTENANCE }), 500));
+    const response = await api.get('/maintenance');
+    return response.data;
   }
 
   async getMaintenanceById(id) {
-    // In a real app: return await axios.get(`/api/maintenance/${id}`);
-    const record = MOCK_MAINTENANCE.find(m => m.id === parseInt(id));
-    return new Promise(resolve => setTimeout(() => resolve({ data: record }), 500));
+    const response = await api.get(`/maintenance/${id}`);
+    return response.data;
   }
 
   async createMaintenanceRecord(recordData) {
-    // In a real app: return await axios.post('/api/maintenance', recordData);
-    const newRecord = { ...recordData, id: Math.random() };
-    return new Promise(resolve => setTimeout(() => resolve({ data: newRecord }), 500));
+    const response = await api.post('/maintenance', recordData);
+    return response.data;
+  }
+
+  async updateMaintenanceRecord(id, recordData) {
+    const response = await api.put(`/maintenance/${id}`, recordData);
+    return response.data;
   }
 
   async deleteMaintenanceRecord(id) {
-    // In a real app: return await axios.delete(`/api/maintenance/${id}`);
-    return new Promise(resolve => setTimeout(() => resolve({ data: { success: true } }), 500));
+    const response = await api.delete(`/maintenance/${id}`);
+    return response.data;
   }
 }
 
