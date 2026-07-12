@@ -16,19 +16,9 @@ import Reports from './pages/reports/Reports.jsx';
 import ForgotPassword from './pages/auth/ForgotPassword.jsx';
 import ResetPassword from './pages/auth/ResetPassword.jsx';
 
+import Settings from './pages/settings/Settings.jsx';
 
 
-
-
-
-
-
-const Settings = () => (
-  <div className="p-4 bg-white rounded-4 shadow-sm">
-    <h2>Settings Page</h2>
-    <p className="text-secondary">Profile settings and credentials configuration placeholder.</p>
-  </div>
-);
 
 function App() {
   return (
