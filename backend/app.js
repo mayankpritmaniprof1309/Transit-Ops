@@ -12,6 +12,12 @@ import dashboardRoutes from './routes/dashboard.routes.js';
 import maintenanceRoutes from './routes/maintenance.routes.js';
 import expenseRoutes from './routes/expense.routes.js';
 import reportRoutes from './routes/report.routes.js';
+import uploadRoutes from './routes/upload.routes.js';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Import Middleware
 import { requestLogger } from './middleware/logger.js';
@@ -34,7 +40,10 @@ app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/maintenance', maintenanceRoutes);
 app.use('/api/expenses', expenseRoutes);
 app.use('/api/reports', reportRoutes);
+app.use('/api/upload', uploadRoutes);
 
+// Static file serving for uploads
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 // Base route
 app.get('/', (req, res) => {
   res.send('TransitOps API is running...');

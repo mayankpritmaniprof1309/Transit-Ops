@@ -34,4 +34,22 @@ api.interceptors.response.use(
   }
 );
 
+export const changePassword = async (passwordData) => {
+  const response = await api.put('/users/profile/password', passwordData);
+  return response.data;
+};
+
+// --- Upload Services ---
+export const uploadImage = async (file) => {
+  const formData = new FormData();
+  formData.append('image', file);
+  
+  const response = await api.post('/upload', formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data'
+    }
+  });
+  return response.data;
+};
+
 export default api;
