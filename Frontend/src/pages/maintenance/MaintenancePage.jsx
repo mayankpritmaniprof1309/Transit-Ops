@@ -39,10 +39,23 @@ const MaintenancePage = () => {
         getAllVehicles({ limit: 100 })
       ]);
       
-      setRecords(maintenanceRes.data || []);
+      const maintenanceData = maintenanceRes.data || {};
+      let mainRecs = [];
+      if (Array.isArray(maintenanceData.maintenanceRecords)) {
+        mainRecs = maintenanceData.maintenanceRecords;
+      } else if (Array.isArray(maintenanceData)) {
+        mainRecs = maintenanceData;
+      }
+      setRecords(mainRecs);
       
       if (vehiclesRes.success && vehiclesRes.data) {
-        setVehicles(vehiclesRes.data);
+        let vehRecs = [];
+        if (Array.isArray(vehiclesRes.data.vehicles)) {
+          vehRecs = vehiclesRes.data.vehicles;
+        } else if (Array.isArray(vehiclesRes.data)) {
+          vehRecs = vehiclesRes.data;
+        }
+        setVehicles(vehRecs);
       }
     } catch (error) {
       console.error("Error loading maintenance records", error);
