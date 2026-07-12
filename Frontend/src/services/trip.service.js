@@ -21,12 +21,18 @@ class TripService {
 
   async createTrip(tripData) {
     // In a real app: return await axios.post('/api/trips', tripData);
-    const newTrip = { ...tripData, id: Math.random() };
+    const nextId = MOCK_TRIPS.length > 0 ? Math.max(...MOCK_TRIPS.map(t => t.id)) + 1 : 1;
+    const newTrip = { ...tripData, id: nextId };
+    MOCK_TRIPS.push(newTrip);
     return new Promise(resolve => setTimeout(() => resolve({ data: newTrip }), 500));
   }
 
   async deleteTrip(id) {
     // In a real app: return await axios.delete(`/api/trips/${id}`);
+    const index = MOCK_TRIPS.findIndex(t => t.id === parseInt(id));
+    if (index !== -1) {
+      MOCK_TRIPS.splice(index, 1);
+    }
     return new Promise(resolve => setTimeout(() => resolve({ data: { success: true } }), 500));
   }
 }
