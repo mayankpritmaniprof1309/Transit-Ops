@@ -87,7 +87,7 @@ export default function ProfileCard({ user }) {
             <FaEnvelope className="text-primary opacity-75" />
             <div>
               <small className="text-secondary d-block lh-1 mb-0.5" style={{ fontSize: '0.75rem' }}>Email Address</small>
-              <span className="fw-semibold text-dark small text-truncate d-inline-block" style={{ maxWidth: '160px' }}>
+              <span className="fw-semibold text-dark small text-break">
                 {user?.email || 'N/A'}
               </span>
             </div>
