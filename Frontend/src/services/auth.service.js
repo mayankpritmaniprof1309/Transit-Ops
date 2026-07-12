@@ -55,3 +55,24 @@ export const getCurrentUser = () => {
   const user = localStorage.getItem('user');
   return user ? JSON.parse(user) : null;
 };
+
+/**
+ * Request a password reset email.
+ * @param {string} email
+ * @returns {Promise<Object>} API response.
+ */
+export const forgotPassword = async (email) => {
+  const response = await api.post('/users/forgot-password', { email });
+  return response.data;
+};
+
+/**
+ * Reset password using a reset token.
+ * @param {string} token - The reset token from the email link.
+ * @param {string} password - The new password.
+ * @returns {Promise<Object>} API response.
+ */
+export const resetPassword = async (token, password) => {
+  const response = await api.post(`/users/reset-password/${token}`, { password });
+  return response.data;
+};

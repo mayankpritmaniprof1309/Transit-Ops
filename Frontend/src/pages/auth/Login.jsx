@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
+import { Link } from 'react-router-dom';
 import { FaUser, FaLock, FaEnvelope, FaBriefcase } from 'react-icons/fa';
 import { login, register } from '../../services/auth.service.js';
 
@@ -136,6 +137,17 @@ export const Login = ({ onAuthSuccess }) => {
                 disabled={loading}
               />
             </div>
+            {!isRegister && (
+              <div className="text-end mt-2">
+                <Link
+                  to="/forgot-password"
+                  className="text-primary text-small text-decoration-none"
+                  style={{ fontSize: '0.875rem' }}
+                >
+                  Forgot Password?
+                </Link>
+              </div>
+            )}
           </div>
 
           {isRegister && (
