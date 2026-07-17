@@ -1,5 +1,6 @@
 import express from 'express';
 import cors from 'cors';
+import mongoose from 'mongoose';
 import { errorHandler } from './middleware/error.js';
 
 // Import Routes
@@ -29,6 +30,17 @@ app.use(requestLogger);
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Database Connection Health Check Middleware
+app.use('/api', (req, res, next) => {
+  if (mongoose.connection.readyState !== 1) {
+    return res.status(503).json({
+      success: false,
+      message: 'Database is currently offline. Please verify that the database server is running and accessible.',
+    });
+  }
+  next();
+});
 
 // Routes
 app.use('/api/drivers', driverRoutes);

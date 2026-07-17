@@ -64,7 +64,7 @@ export default function SystemInformation({ user }) {
       items: [
         { label: 'API Gateway Status', value: apiStatus, badge: apiStatus.includes('Online') ? 'success' : 'danger' },
         { label: 'Backend Server Version', value: backendVersion },
-        { label: 'Base endpoint URL', value: import.meta.env.VITE_API_URL || 'http://localhost:5000/api' },
+        { label: 'Base endpoint URL', value: import.meta.env.VITE_API_URL || 'http://localhost:3000/api' },
       ],
     },
     {
